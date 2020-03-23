@@ -18,11 +18,13 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
     protected SurfaceHolder mHolder;
     // 描画バッファ用ビットマップ
     protected Bitmap BaseBitmap;
-    // ボール
-//    private Ball Ball = new Ball(this);
-    private List<Ball> Balls = new ArrayList<Ball>();
-    // ラケット
-    private List<Racket> Rackets = new ArrayList<Racket>();
+
+    // 画面を構成する部品
+//    private Ball Ball = new Ball(this);   // ボール
+    private List<Ball> Balls = new ArrayList<Ball>();   // ボール
+    private List<Racket> Rackets = new ArrayList<Racket>(); // ラケット
+    private List<Wall> Walls = new ArrayList<Wall>();   // 壁
+
     // スレッド用フィールド
     private Thread mLooper;
     private int MilliSec = 10;  // 待機時間
@@ -101,6 +103,16 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
             // 画面ベースビットアップを生成する
             BaseBitmap = Bitmap.createBitmap(getWidth(), getHeight(),
                     Bitmap.Config.ARGB_8888);
+
+            // 壁
+            WallLeft wall_left = new WallLeft(0, 0, getHeight(), 0);
+            Walls.add(wall_left);
+            WallRight wall_right = new WallRight(getWidth(), 0, getHeight(), 0);
+            Walls.add(wall_right);
+            WallTop wall_top = new WallTop(0, 0, 0, getWidth());
+            Walls.add(wall_top);
+            WallBottom wall_bottom = new WallBottom(0, getHeight(), 0, getWidth());
+            Walls.add(wall_bottom);
 
             // ボールの直径を決める
             float radius = getHeight() * 0.015f;
@@ -185,7 +197,7 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
                     offscreen.drawColor(Color.BLACK);
                     // 部品を画面バッファに描画
                     for (Ball ball : Balls) {
-                        ball.UpdateDisplay(offscreen);
+                        ball.UpdateDisplay(offscreen, Walls);
                     }
                     int i = 0;
                     for (Racket racket : Rackets) {
