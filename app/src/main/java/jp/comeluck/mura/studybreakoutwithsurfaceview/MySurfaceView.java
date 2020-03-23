@@ -21,7 +21,8 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
     // ボール
 //    private Ball Ball = new Ball(this);
     private List<Ball> Balls = new ArrayList<Ball>();
-
+    // ラケット
+    private List<Racket> Rackets = new ArrayList<Racket>();
     // スレッド用フィールド
     private Thread mLooper;
     private int MilliSec = 10;  // 待機時間
@@ -101,18 +102,28 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
             BaseBitmap = Bitmap.createBitmap(getWidth(), getHeight(),
                     Bitmap.Config.ARGB_8888);
 
+            // ボールの直径を決める
+            float radius = getHeight() * 0.015f;
             // Ball1を作成
             Ball ball1 = new Ball(this);
             // Ball1を初期化
-            ball1.Init(1, 1, 60, 0.5);
+            ball1.Init(1, 1, 60, 1.5, radius, Color.GREEN);
             // リストに保存
             Balls.add(ball1);
             // Ball2を作成
             Ball ball2 = new Ball(this);
             // Ball2を初期化
-            ball2.Init(512, 1, 150, 0.3);
+            ball2.Init(512, 1, 150, 0.3, radius, Color.MAGENTA);
             // リストに保存
             Balls.add(ball2);
+
+            // ラケット
+            Racket racket1 = new Racket();
+            racket1.Init( (int)(getHeight() * 0.005), (int)ball1.GetRadius() * 8, Color.GREEN);
+            Rackets.add(racket1);
+            Racket racket2 = new Racket();
+            racket2.Init((int)(getHeight() * 0.005), (int)ball2.GetRadius() * 8, Color.MAGENTA);
+            Rackets.add(racket2);
 
             //スレッドの生成
             mHolder = holder;
@@ -164,13 +175,9 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
         synchronized (this) {
             while (mLooper != null) {
 
-                // 描画処理
-//                // 画面ベースビットアップを生成する
-//                BaseBitmap = Bitmap.createBitmap(getWidth(), getHeight(),
-//                        Bitmap.Config.ARGB_8888);
-
                 //Canvasの取得(マルチスレッド環境対応のためLock)
                 Canvas canvas = mHolder.lockCanvas();
+                // 描画処理
                 if (canvas != null) {
                     // 画面バッファを生成する
                     Canvas offscreen = new Canvas(BaseBitmap);
@@ -180,11 +187,17 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
                     for (Ball ball : Balls) {
                         ball.UpdateDisplay(offscreen);
                     }
+                    int i = 0;
+                    for (Racket racket : Rackets) {
+                        Ball ball = Balls.get(i);
+                        racket.UpdateDisplay(ball.GetCenter().GetX(), getHeight(), offscreen);
+                        i++;
+                    }
                     // 画面バッファを画面に描画する
                     canvas.drawBitmap(BaseBitmap, 0, 0, null);
 
                 }
-                //LockしたCanvasを解放、ほかの描画処理スレッドがあればそちらに。
+                //LockしたCanvasを解放、ほかの描画処理スレッドがあればそちらで処理できるようになる。
                 mHolder.unlockCanvasAndPost(canvas);
 
                 // CPUを占有しないための待ち
