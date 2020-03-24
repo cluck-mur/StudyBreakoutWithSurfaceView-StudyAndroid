@@ -22,12 +22,12 @@ public class WallTop extends Wall {
      * @return
      */
     @Override
-    public boolean CheckHit(Ball ball) {
+    public boolean checkHit(Ball ball) {
         boolean ret_bool = false;
-        int ball_top = ball.GetBallTop();
-        int ball_bottom = ball.GetBallBottom();
-        double angle = ball.GetAngle();
-        if (ball_top < Top + Height) {
+        int ball_top = ball.getTop();
+        int ball_bottom = ball.getBottom();
+        double angle = ball.getAngle();
+        if (ball_top < top + height) {
             ret_bool = true;
 
             Log.d("WallTop", String.format("上の壁"));
@@ -38,11 +38,11 @@ public class WallTop extends Wall {
                 double incidence_angle = angle - 180;
                 angle = (angle - (incidence_angle * 2)) % 360;
             }
-            ball_top = Top + Height + (int)(ball.GetRadius() * 2);
+            ball_top = top + height + (int)(ball.getRadius() * 2);
             Log.d("WallTop", String.format("Angle [%e]", angle));
 
-            ball.SetBallTop(ball_top);
-            ball.SetAngle(angle);
+            ball.setTop(ball_top);
+            ball.setAngle(angle);
         }
 
         return ret_bool;

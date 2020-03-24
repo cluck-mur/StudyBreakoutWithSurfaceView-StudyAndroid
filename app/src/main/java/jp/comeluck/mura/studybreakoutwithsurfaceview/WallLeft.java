@@ -20,11 +20,11 @@ public class WallLeft extends Wall {
      * @return
      */
     @Override
-    public boolean CheckHit(Ball ball) {
+    public boolean checkHit(Ball ball) {
         boolean ret_bool = false;
-        int ball_left = ball.GetBallLeft();
-        double angle = ball.GetAngle();
-        if (ball_left < Left + Width) {
+        int ball_left = ball.getLeft();
+        double angle = ball.getAngle();
+        if (ball_left < left + width) {
             ret_bool = true;
 
             Log.d("WallLeft", String.format("左の壁"));
@@ -35,11 +35,11 @@ public class WallLeft extends Wall {
                 double incidence_angle = angle - 90;
                 angle = (angle - (incidence_angle * 2)) % 360;
             }
-            ball_left = Left + Width + (int)(ball.GetRadius() * 2);
+            ball_left = left + width + (int)(ball.getRadius() * 2);
             Log.d("WallLeft", String.format("Angle [%e]", angle));
 
-            ball.SetBallLeft(ball_left);
-            ball.SetAngle(angle);
+            ball.setLeft(ball_left);
+            ball.setAngle(angle);
         }
 
         return ret_bool;

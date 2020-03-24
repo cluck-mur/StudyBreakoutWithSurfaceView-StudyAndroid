@@ -20,12 +20,12 @@ public class WallBottom extends Wall {
      * @return
      */
     @Override
-    public boolean CheckHit(Ball ball) {
+    public boolean checkHit(Ball ball) {
         boolean ret_bool = false;
-        int ball_top = ball.GetBallTop();
-        int ball_bottom = ball.GetBallBottom();
-        double angle = ball.GetAngle();
-        if (ball_bottom > Top) {
+        int ball_top = ball.getTop();
+        int ball_bottom = ball.getBottom();
+        double angle = ball.getAngle();
+        if (ball_bottom > top) {
             ret_bool = true;
 
             Log.d("WallBottom", String.format("下の壁"));
@@ -36,11 +36,11 @@ public class WallBottom extends Wall {
                 double incidence_angle = angle;
                 angle = 360 - Math.abs(((angle - (incidence_angle * 2)) % 360));
             }
-            ball_top = Top - (int)(ball.GetRadius() * 2);
+            ball_top = top - (int)(ball.getRadius() * 2);
             Log.d("WallBottom", String.format("Angle [%e]", angle));
 
-            ball.SetBallTop(ball_top);
-            ball.SetAngle(angle);
+            ball.setTop(ball_top);
+            ball.setAngle(angle);
         }
 
         return ret_bool;

@@ -22,12 +22,12 @@ public class WallRight extends Wall {
      * @return
      */
     @Override
-    public boolean CheckHit(Ball ball) {
+    public boolean checkHit(Ball ball) {
         boolean ret_bool = false;
-        int ball_left = ball.GetBallLeft();
-        int ball_right = ball.GetBallRight();
-        double angle = ball.GetAngle();
-        if (ball_right > Left) {
+        int ball_left = ball.getLeft();
+        int ball_right = ball.getRight();
+        double angle = ball.getAngle();
+        if (ball_right > left) {
             ret_bool = true;
 
             Log.d("WallRight", String.format("右の壁"));
@@ -38,11 +38,11 @@ public class WallRight extends Wall {
                 double incidence_angle = angle - 270;
                 angle = (angle - (incidence_angle * 2)) % 360;
             }
-            ball_left = Left - (int)(ball.GetRadius() * 2);
+            ball_left = left - (int)(ball.getRadius() * 2);
             Log.d("WallRight", String.format("Angle [%e]", angle));
 
-            ball.SetBallLeft(ball_left);
-            ball.SetAngle(angle);
+            ball.setLeft(ball_left);
+            ball.setAngle(angle);
         }
 
         return ret_bool;

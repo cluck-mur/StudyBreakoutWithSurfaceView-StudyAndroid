@@ -1,10 +1,10 @@
 package jp.comeluck.mura.studybreakoutwithsurfaceview;
 
 public abstract class Wall {
-    int Left;
-    int Top;
-    int Height;
-    int Width;
+    protected int left;
+    protected int top;
+    protected int height;
+    protected int width;
 
     /**
      * コンストラクター
@@ -14,10 +14,10 @@ public abstract class Wall {
      * @param width
      */
     public Wall(int left, int top, int height, int width) {
-        Left = left;
-        Top = top;
-        Height = height;
-        Width = width;
+        this.left = left;
+        this.top = top;
+        this.height = height;
+        this.width = width;
     }
 
     /**
@@ -25,5 +25,5 @@ public abstract class Wall {
      * @param ball
      * @return
      */
-    abstract public boolean CheckHit(Ball ball);
+    abstract public boolean checkHit(Ball ball);
 }

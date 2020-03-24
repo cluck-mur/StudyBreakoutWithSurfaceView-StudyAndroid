@@ -1,10 +1,7 @@
 package jp.comeluck.mura.studybreakoutwithsurfaceview;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -16,108 +13,108 @@ import java.util.List;
  */
 public class Ball {
     // 親であるView
-    protected MySurfaceView ParentView;
+    protected MySurfaceView parentView;
 
     // ボールデータ
-    protected float Radius = 0;
-    protected int FillColor = Color.WHITE;
+    protected float radius = 0;
+    protected int fillColor = Color.WHITE;
     public class Center {
-        protected int X;    // 座標 X
-        protected int Y;    // 座標 Y
+        protected int x;    // 座標 X
+        protected int y;    // 座標 Y
 
         /**
          * 座標 セット
          * @param x
          * @param y
          */
-        public void SetCoordinate(int x, int y) {
-            X = x;
-            Y = y;
+        public void setCoordinate(int x, int y) {
+            this.x = x;
+            this.y = y;
         }
 
         /**
          * 葉表 X ゲット
          * @return
          */
-        public int GetX() {
-            return X;
+        public int getX() {
+            return x;
         }
 
         /**
          * 座標 Y ゲット
          * @return
          */
-        public int GetY() {
-            return Y;
+        public int getY() {
+            return y;
         }
     }
-    protected Center Center = new Center(); // 中心座標
+    protected Center center = new Center(); // 中心座標
 
     // 移動に関するデータ
-    private double BallSpeed = 0.5d; // px/ms
-    private int BallLeft = 1;
-    private int BallTop = 1;
-    private double Angle = 60;
+    private double speed = 0.5d; // px/ms
+    private int left = 1;
+    private int top = 1;
+    private double angle = 60;
 
     // 経過時間の管理
-    private long mTime = 0;     //一つ前の描画時刻
+    private long updatedTime = 0;     //一つ前の描画時刻
 
     /**
      * コンストラクター
      */
     public Ball(MySurfaceView parent_view) {
-        ParentView = parent_view;
+        parentView = parent_view;
     }
 
     /**
      * 初期化
      */
-    protected void Init() {
+    protected void init() {
     }
 
     /**
      * 初期化
      */
-    public void Init(int position_left, int position_top, double angle, double speed, float radius, int color) {
-        Init();
-        BallLeft = position_left;
-        BallTop = position_top;
-        Angle = angle;
-        BallSpeed = speed;
+    public void init(int position_left, int position_top, double angle, double speed, float radius, int color) {
+        init();
+        this.left = position_left;
+        this.top = position_top;
+        this.angle = angle;
+        this.speed = speed;
 
-        Radius = radius;
-        FillColor = color;
+        this.radius = radius;
+        this.fillColor = color;
     }
 
     /**
      * 直径を取得
      * @return
      */
-    public float GetRadius() {
-        return Radius;
+    public float getRadius() {
+        return this.radius;
     }
 
     /**
      * 直径をセット
      * @param radius
      */
-    public void SetRadius(float radius) {
-        Radius = radius;
+    public void setRadius(float radius) {
+        this.radius = radius;
     }
 
     /**
      * 中心を取得
      * @return
      */
-    public Center GetCenter() { return Center; }
+    public Center getCenter() { return this.center; }
 
     /**
      * 中心をセット
      * @param x
      * @param y
      */
-    public void SetCenter(int x, int y) {
-        Center.SetCoordinate(x, y);
+    public void setCenter(int x, int y) {
+        this.center.setCoordinate(x, y);
     }
 
     /**
@@ -126,110 +123,110 @@ public class Ball {
      * @param top
      * @param radius
      */
-    public void SetCenter(int left, int top, float radius) {
+    public void setCenter(int left, int top, float radius) {
         int x = left + (int)radius;
         int y = top + (int)radius;
-        Center.SetCoordinate(x, y);
+        this.center.setCoordinate(x, y);
     }
 
     /**
      * ボールの左位置をゲット
      * @return
      */
-    public int GetBallLeft() {
-        return BallLeft;
+    public int getLeft() {
+        return this.left;
     }
 
     /**
      * ボールの左位置をセット
      * @param ball_left
      */
-    public void SetBallLeft(int ball_left) {
-        BallLeft = ball_left;
+    public void setLeft(int left) {
+        this.left = left;
     }
 
     /**
      * ボールの左位置をゲット
      * @return
      */
-    public int GetBallRight() {
-        return (int)(BallLeft + (Radius * 2));
+    public int getRight() {
+        return (int)(this.left + (this.radius * 2));
     }
 
     /**
      * ボールの上位置をゲット
      */
-    public int GetBallTop() {
-        return BallTop;
+    public int getTop() {
+        return top;
     }
 
     /**
      * ボールの上位置をセット
      * @param ball_top
      */
-    public void SetBallTop(int ball_top) {
-        BallTop = ball_top;
+    public void setTop(int ball_top) {
+        top = ball_top;
     }
 
     /**
      * ボールの下位置をゲット
      */
-    public int GetBallBottom() {
-        return (int)(BallTop + (Radius * 2));
+    public int getBottom() {
+        return (int)(top + (radius * 2));
     }
 
     /**
      * ボールの進行角度をゲット
      * @return
      */
-    public double GetAngle() {
-        return Angle;
+    public double getAngle() {
+        return angle;
     }
 
     /**
      * ボールの進行角度をセット
      * @param angle
      */
-    public void SetAngle(double angle) {
-        Angle = angle;
+    public void setAngle(double angle) {
+        this.angle = angle;
     }
 
     /**
      *  表示更新
      */
-    public void UpdateDisplay(Canvas offscreen, List<Wall> walls) {
-        SurfaceHolder holder = ParentView.GetSurfaceHolder();
+    public void updateDisplay(Canvas offscreen, List<Wall> walls) {
+        SurfaceHolder holder = parentView.getSurfaceHolder();
         if (holder != null) {
-            long past_time = mTime;
-            mTime = System.currentTimeMillis();
+            long past_time = updatedTime;
+            updatedTime = System.currentTimeMillis();
 //            String msg = String.format("経過時間 [%d] ms", (mTime - past_time));
 //            Log.d("debug", msg);
             if (past_time > 0) {
-                long elapsed_time = mTime - past_time;
-                double distance = BallSpeed * elapsed_time;
-                double radians = Math.toRadians(Angle);
+                long elapsed_time = updatedTime - past_time;
+                double distance = speed * elapsed_time;
+                double radians = Math.toRadians(angle);
                 double x_distance = distance * Math.cos(radians);
                 double y_distance = distance * Math.sin(radians);
-                BallLeft = BallLeft + (int)x_distance;
-                BallTop = BallTop + (int)y_distance;
+                left = left + (int)x_distance;
+                top = top + (int)y_distance;
 
                 // バウンドの判定
                 boolean check_result = false;
                 for (Wall wall : walls ) {
-                    if (wall.CheckHit(this)) {
+                    if (wall.checkHit(this)) {
                         break;
                     }
                 }
-                Log.d("Ball", String.format("BallLeft [%d] BallTop [%d]", BallLeft, BallTop));
+                Log.d("Ball", String.format("BallLeft [%d] BallTop [%d]", left, top));
             }
 
             // 中心をセット
-            SetCenter(BallLeft, BallTop, Radius);
+            setCenter(left, top, radius);
 
             //描画処理(Lock中なのでなるべく早く)
             Paint paint = new Paint();
-            paint.setColor(FillColor);
-            offscreen.drawCircle(Center.GetX(), Center.GetY(), Radius, paint);
+            paint.setColor(fillColor);
+            offscreen.drawCircle(center.getX(), center.getY(), radius, paint);
         }
     }
 }
