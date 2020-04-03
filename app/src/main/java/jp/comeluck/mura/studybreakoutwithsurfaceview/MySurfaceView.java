@@ -135,15 +135,15 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
             // Ball1 オブジェクトを生成
             Ball ball1 = new Ball(this);
             // Ball1を初期化
-            ball1.init(1, 1, 60, 1.5, radius, Color.GREEN);
+            ball1.init((int)(secondScreenBuffer.getWidth() * 0.25), (int) (secondScreenBuffer.getHeight() * 0.75), 60, 1.5, radius, Color.GREEN);
             // リストに保存
             balls.add(ball1);
             // Ball2 オブジェクトを生成
             Ball ball2 = new Ball(this);
             // Ball2を初期化
-            ball2.init(512, 1, 150, 0.3, radius, Color.MAGENTA);
+            ball2.init((int)(secondScreenBuffer.getWidth() * 0.75), (int)(secondScreenBuffer.getHeight() * 0.75), 125, 0.3, radius, Color.MAGENTA);
             // リストに保存
-            balls.add(ball2);
+//            balls.add(ball2);
 
             // ラケット1 オブジェクトを生成
             Racket racket1 = new Racket();
@@ -152,7 +152,7 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
             // ラケット2 オブジェクトを生成
             Racket racket2 = new Racket();
             racket2.init((int)(getHeight() * 0.005), (int)(ball2.getRadius() * 12), Color.MAGENTA);
-            rackets.add(racket2);
+  //          rackets.add(racket2);
 
             // ブロックのコンフィグ値を設定
             blockTop = (int)(secondScreenBuffer.getHeight() * 0.15);
@@ -229,11 +229,11 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
                     // 前の表示を消すため塗りつぶす
                     offscreen.drawColor(Color.BLACK);
                     // 部品を画面バッファに描画
+                    for (Ball ball : balls) {
+                        ball.updateDisplay(offscreen, walls, blocks, System.currentTimeMillis());
+                    }
                     for (Block block : blocks) {
                         block.updateDisplay(offscreen);
-                    }
-                    for (Ball ball : balls) {
-                        ball.updateDisplay(offscreen, walls);
                     }
                     int i = 0;
                     for (Racket racket : rackets) {

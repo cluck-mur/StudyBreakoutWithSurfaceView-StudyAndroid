@@ -18,19 +18,6 @@ public class Ball {
     // ボールデータ
     protected float radius = 0;
     protected int fillColor = Color.WHITE;
-    public class Center {
-        protected int x;    // 座標 X
-        protected int y;    // 座標 Y
-
-        /**
-         * 座標 セット
-         * @param x
-         * @param y
-         */
-        public void setCoordinate(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
 
         /**
          * 葉表 X ゲット
@@ -48,7 +35,7 @@ public class Ball {
             return y;
         }
     }
-    protected Center center = new Center(); // 中心座標
+    protected BallCenter center = new BallCenter(); // 中心座標
 
     // 移動に関するデータ
     private double speed = 0.5d; // px/ms
@@ -106,7 +93,7 @@ public class Ball {
      * 中心を取得
      * @return
      */
-    public Center getCenter() { return this.center; }
+    public BallCenter getCenter() { return this.center; }
 
     /**
      * 中心をセット
@@ -192,30 +179,141 @@ public class Ball {
     }
 
     /**
+     * スピード をゲット
+     * @return
+     */
+    public double getSpeed() {
+        return speed;
+    }
+
+    /**
      *  表示更新
      */
-    public void updateDisplay(Canvas offscreen, List<Wall> walls) {
+    public void updateDisplay(Canvas offscreen, List<Wall> walls, List<Block> blocks, long now_time) {
         SurfaceHolder holder = parentView.getSurfaceHolder();
         if (holder != null) {
             long past_time = updatedTime;
-            updatedTime = System.currentTimeMillis();
+//            updatedTime = System.currentTimeMillis();
+            updatedTime = now_time;
 //            String msg = String.format("経過時間 [%d] ms", (mTime - past_time));
 //            Log.d("debug", msg);
             if (past_time > 0) {
-                long elapsed_time = updatedTime - past_time;
-                double distance = speed * elapsed_time;
-                double radians = Math.toRadians(angle);
-                double x_distance = distance * Math.cos(radians);
-                double y_distance = distance * Math.sin(radians);
-                left = left + (int)x_distance;
-                top = top + (int)y_distance;
+                UpdateDisplayIf update_display_if = new UpdateDisplayIf();
+                update_display_if.setElapsedTime(updatedTime - past_time);    // 経過時間
+                update_display_if.setElapsedTime2(0);
+                boolean hit_flg = false;
 
-                // バウンドの判定
-                boolean check_result = false;
-                for (Wall wall : walls ) {
-                    if (wall.checkHit(this)) {
-                        break;
+                do {
+                    // ブロックとの衝突判定
+                    long elapsed_time = update_display_if.getElapsedTime() - update_display_if.getElapsedTime2();
+                    long elapsed_time2 = 0;
+                    update_display_if.setElapsedTime(elapsed_time);    // 経過時間
+                    update_display_if.setElapsedTime2(elapsed_time2);
+                    hit_flg = false;
+                    long necessary_time_to_hit = 0;
+                    // ブロックとの衝突判定
+                    for (Block block : blocks) {
+                        HitProcessInterface tmp_necessary_time_to_hit = block.calcNecessaryTimeToHit(this, update_display_if);
+                        if (tmp_necessary_time_to_hit != null && tmp_necessary_time_to_hit.getHitableMsec() < elapsed_time) {
+                            if () {
+
+                            }
+
+                        hit_flg = block.checkHit(this, update_display_if, tmp_necessary_time_to_hit);
+                        if (hit_flg) {
+                            break;
+                        }
                     }
+
+                    if (!hit_flg) {
+                        // 最初にボールが衝突する壁を見つける
+                        Wall hit_wall = null;
+//                        long necessary_time_to_hit = 0;
+                        int wall_count = 0;
+                        for (Wall wall : walls) {
+                            long tmp_necessary_time_to_hit = wall.calcNecessaryTimeToHit(this);
+                            if (tmp_necessary_time_to_hit != -1 && tmp_necessary_time_to_hit < elapsed_time) {
+                                if (necessary_time_to_hit == 0 || tmp_necessary_time_to_hit < necessary_time_to_hit) {
+                                    hit_wall = wall;
+                                    necessary_time_to_hit = tmp_necessary_time_to_hit;
+                                    if (necessary_time_to_hit < 0) {
+                                        Log.d("Ball", "necessary_time_to_hit がマイナス");
+                                    }
+                                }
+                            }
+                            wall_count++;
+                        }
+
+                        // 壁に衝突したか？
+                        if (hit_wall != null) {
+                            // ボールが壁に衝突した時の処理
+                            hit_flg = hit_wall.checkHit(this, update_display_if);
+                        }
+                    }
+                } while (hit_flg);
+
+//                    do {
+//                        // ブロックとの衝突判定
+//                        long elapsed_time = update_display_if.getElapsedTime() - update_display_if.getElapsedTime2();
+//                        long elapsed_time2 = 0;
+//                        update_display_if.setElapsedTime(elapsed_time);    // 経過時間
+//                        update_display_if.setElapsedTime2(elapsed_time2);
+//                        hit_flg = false;
+//                        // ブロックとの衝突判定
+//                        for (Block block : blocks) {
+//                            hit_flg = block.checkHit(this, update_display_if);
+//                            if (hit_flg) {
+//                                break;
+//                            }
+//                        }
+//                    } while (hit_flg);
+//
+//
+//                // 壁との衝突の判定
+//                int i = 0;
+//                do {
+//                    long elapsed_time = update_display_if.getElapsedTime() - update_display_if.getElapsedTime2();
+//                    long elapsed_time2 = 0;
+//                    update_display_if.setElapsedTime(elapsed_time);    // 経過時間
+//                    update_display_if.setElapsedTime2(elapsed_time2);
+//                    hit_flg = false;
+//
+//                    // 最初にボールが衝突する壁を見つける
+//                    Wall hit_wall = null;
+//                    long necessary_time_to_hit = 0;
+//                    int wall_count = 0;
+//                    for (Wall wall : walls) {
+//                        long tmp_necessary_time_to_hit = wall.calcNecessaryTimeToHit(this);
+//                        if (tmp_necessary_time_to_hit != -1 && tmp_necessary_time_to_hit < elapsed_time) {
+//                            if (necessary_time_to_hit == 0 || tmp_necessary_time_to_hit < necessary_time_to_hit) {
+//                                hit_wall = wall;
+//                                necessary_time_to_hit = tmp_necessary_time_to_hit;
+//                                if (necessary_time_to_hit < 0) {
+//                                    Log.d("Ball", "necessary_time_to_hit がマイナス");
+//                                }
+//                            }
+//                        }
+//                        wall_count++;
+//                    }
+//
+//                    // 壁に衝突したか？
+//                    if (hit_wall != null) {
+//                        // ボールが壁に衝突した時の処理
+//                        hit_flg = hit_wall.checkHit(this, update_display_if);
+//                    }
+//                    i++;
+//                } while (hit_flg);
+
+                // 最終的なボールの位置
+                Log.d("Ball", String.format("最終的なボールの位置を計算する"));
+                long final_elapsed_time = update_display_if.getElapsedTime() - update_display_if.getElapsedTime2();
+                if (!hit_flg || final_elapsed_time > 0) {
+                    double distance = speed * final_elapsed_time;
+                    double radians = Math.toRadians(angle);
+                    double x_distance = distance * Math.cos(radians);
+                    double y_distance = distance * Math.sin(radians);
+                    left = left + (int)x_distance;
+                    top = top + (int)y_distance;
                 }
                 Log.d("Ball", String.format("BallLeft [%d] BallTop [%d]", left, top));
             }
