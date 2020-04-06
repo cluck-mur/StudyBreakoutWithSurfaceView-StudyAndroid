@@ -18,35 +18,6 @@ public class Ball {
     // ボールデータ
     protected float radius = 0;
     protected int fillColor = Color.WHITE;
-
-//    /**
-//     * 中心座標を保持するクラス
-//     */
-//    public class Center {
-//        protected int x;
-//        protected int y;
-//
-//        public Center(int x, int y) {
-//            this.x = x;
-//            this.y = y;
-//        }
-//
-//        /**
-//         * 葉表 X ゲット
-//         * @return
-//         */
-//        public int getX() {
-//            return x;
-//        }
-//
-//        /**
-//         * 座標 Y ゲット
-//         * @return
-//         */
-//        public int getY() {
-//            return y;
-//        }
-//    }
     protected BallCenter center = new BallCenter(); // 中心座標
 
     // 移動に関するデータ
@@ -57,6 +28,9 @@ public class Ball {
 
     // 経過時間の管理
     private long updatedTime = 0;     //一つ前の描画時刻
+
+    // ループ回数（デバッグ）
+    private int loopCount = 0;
 
     /**
      * コンストラクター
@@ -202,6 +176,10 @@ public class Ball {
      *  表示更新
      */
     public void updateDisplay(Canvas offscreen, List<Wall> walls, List<Block> blocks, long now_time) {
+        // デバッグ
+        Log.d("Ball", String.format("loopCount [%d]", loopCount));
+        loopCount++;
+
         // MyFurfaceView から画面を操作するために SurfaceHolder を取得
         SurfaceHolder holder = parentView.getSurfaceHolder();
         // SurfaceHolder を無事ゲットできたら
@@ -229,110 +207,58 @@ public class Ball {
                 // 経過時間内に衝突したブロックや壁がなくなるまでループ
                 do {
                     //++ ブロックや壁との衝突判定
-                    // 衝突後の経過時間に設定しなおし
-                    elapsed_time = update_display_if.getElapsedTime() - update_display_if.getElapsedTime2();
-                    // 衝突までの時間を再度初期化
-                    elapsed_time2 = 0;
-                    // インターフェースに設定しなおし
-                    update_display_if.setElapsedTime(elapsed_time);    // 経過時間
-                    update_display_if.setElapsedTime2(elapsed_time2);
+//                    // 衝突後の経過時間に設定しなおし
+//                    elapsed_time = update_display_if.getElapsedTime() - update_display_if.getElapsedTime2();
+//                    // 衝突までの時間を再度初期化
+//                    elapsed_time2 = 0;
+//                    // インターフェースに設定しなおし
+//                    update_display_if.setElapsedTime(elapsed_time);    // 経過時間
+//                    update_display_if.setElapsedTime2(elapsed_time2);
                     // 衝突フラグを設定しなおし
                     hit_flg = false;
-                    HitProcessInterface necessary_time_to_hit = null;
+                    HitProcessInterface hpi = null;
                     // ブロックとの衝突判定 ブロックの数だけループ
                     for (Block block : blocks) {
 //                        HitProcessInterface tmp_necessary_time_to_hit = block.calcNecessaryTimeToHit(this, update_display_if);
-                        HitProcessInterface tmp_necessary_time_to_hit = block.checkHit(this, update_display_if);
-                        if (tmp_necessary_time_to_hit != null && tmp_necessary_time_to_hit.getHitableMsec() < elapsed_time) {
-                            if () {
-
+                        HitProcessInterface tmp_hpi = block.checkHit(this, update_display_if);
+                        if (tmp_hpi != null && tmp_hpi.getHitableMsec() < elapsed_time) {
+                            // 衝突までの時間が前に判定したブロックより小さいなら
+                            if (hpi == null || (hpi.getHitableMsec() > 0 && tmp_hpi.getHitableMsec() < hpi.getHitableMsec())) {
+                                // 候補として保持
+                                hpi = tmp_hpi;
                             }
-
-                        hit_flg = block.checkHit(this, update_display_if, tmp_necessary_time_to_hit);
-                        if (hit_flg) {
-                            break;
                         }
                     }
 
-                    if (!hit_flg) {
-                        // 最初にボールが衝突する壁を見つける
-                        Wall hit_wall = null;
-//                        long necessary_time_to_hit = 0;
-                        int wall_count = 0;
-                        for (Wall wall : walls) {
-//                            long tmp_necessary_time_to_hit = wall.calcNecessaryTimeToHit(this);
-                            tmp_necessary_time_to_hit = wall.calcNecessaryTimeToHit(this, update_display_if);
-                            if (tmp_necessary_time_to_hit != -1 && tmp_necessary_time_to_hit < elapsed_time) {
-                                if (necessary_time_to_hit == 0 || tmp_necessary_time_to_hit < necessary_time_to_hit) {
-                                    hit_wall = wall;
-                                    necessary_time_to_hit = tmp_necessary_time_to_hit;
-                                    if (necessary_time_to_hit < 0) {
-                                        Log.d("Ball", "necessary_time_to_hit がマイナス");
-                                    }
-                                }
+                    // 壁との衝突判定
+                    for (Wall wall : walls) {
+                        HitProcessInterface tmp_hpi = wall.checkHit(this, update_display_if);
+                        if (tmp_hpi != null && tmp_hpi.getHitableMsec() < elapsed_time) {
+                            // 衝突までの時間が前に判定したブロックより小さいなら
+                            if (hpi == null || (hpi.getHitableMsec() > 0 && tmp_hpi.getHitableMsec() < hpi.getHitableMsec())) {
+                                // 候補として保持
+                                hpi = tmp_hpi;
                             }
-                            wall_count++;
                         }
+                    }
 
-                        // 壁に衝突したか？
-                        if (hit_wall != null) {
-                            // ボールが壁に衝突した時の処理
-                            hit_flg = hit_wall.checkHit(this, update_display_if);
+                    // ブロックか壁に衝突したか？
+                    if (hpi != null) {
+                        // ボールがブロックや壁に衝突した時の処理
+                        Block block = hpi.getBlock();
+                        Wall wall = hpi.getWall();
+                        if (block != null) {
+                            block.setIsDisplay(false);
                         }
+                        // 経過時間データを更新
+                        update_display_if.setElapsedTime2(update_display_if.getElapsedTime2() + hpi.getHitableMsec());
+                        // ボールにデータをセット
+                        setLeft(hpi.getNewBallCenterX() - (int)radius);
+                        setTop(hpi.getNewBallCenterY() - (int)radius);
+                        setAngle(hpi.getNewAngle());
+                        hit_flg = true;
                     }
                 } while (hit_flg);
-
-//                    do {
-//                        // ブロックとの衝突判定
-//                        long elapsed_time = update_display_if.getElapsedTime() - update_display_if.getElapsedTime2();
-//                        long elapsed_time2 = 0;
-//                        update_display_if.setElapsedTime(elapsed_time);    // 経過時間
-//                        update_display_if.setElapsedTime2(elapsed_time2);
-//                        hit_flg = false;
-//                        // ブロックとの衝突判定
-//                        for (Block block : blocks) {
-//                            hit_flg = block.checkHit(this, update_display_if);
-//                            if (hit_flg) {
-//                                break;
-//                            }
-//                        }
-//                    } while (hit_flg);
-//
-//
-//                // 壁との衝突の判定
-//                int i = 0;
-//                do {
-//                    long elapsed_time = update_display_if.getElapsedTime() - update_display_if.getElapsedTime2();
-//                    long elapsed_time2 = 0;
-//                    update_display_if.setElapsedTime(elapsed_time);    // 経過時間
-//                    update_display_if.setElapsedTime2(elapsed_time2);
-//                    hit_flg = false;
-//
-//                    // 最初にボールが衝突する壁を見つける
-//                    Wall hit_wall = null;
-//                    long necessary_time_to_hit = 0;
-//                    int wall_count = 0;
-//                    for (Wall wall : walls) {
-//                        long tmp_necessary_time_to_hit = wall.calcNecessaryTimeToHit(this);
-//                        if (tmp_necessary_time_to_hit != -1 && tmp_necessary_time_to_hit < elapsed_time) {
-//                            if (necessary_time_to_hit == 0 || tmp_necessary_time_to_hit < necessary_time_to_hit) {
-//                                hit_wall = wall;
-//                                necessary_time_to_hit = tmp_necessary_time_to_hit;
-//                                if (necessary_time_to_hit < 0) {
-//                                    Log.d("Ball", "necessary_time_to_hit がマイナス");
-//                                }
-//                            }
-//                        }
-//                        wall_count++;
-//                    }
-//
-//                    // 壁に衝突したか？
-//                    if (hit_wall != null) {
-//                        // ボールが壁に衝突した時の処理
-//                        hit_flg = hit_wall.checkHit(this, update_display_if);
-//                    }
-//                    i++;
-//                } while (hit_flg);
 
                 // 最終的なボールの位置
                 Log.d("Ball", String.format("最終的なボールの位置を計算する"));
