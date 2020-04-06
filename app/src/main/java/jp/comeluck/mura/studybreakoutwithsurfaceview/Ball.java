@@ -19,22 +19,34 @@ public class Ball {
     protected float radius = 0;
     protected int fillColor = Color.WHITE;
 
-        /**
-         * 葉表 X ゲット
-         * @return
-         */
-        public int getX() {
-            return x;
-        }
-
-        /**
-         * 座標 Y ゲット
-         * @return
-         */
-        public int getY() {
-            return y;
-        }
-    }
+//    /**
+//     * 中心座標を保持するクラス
+//     */
+//    public class Center {
+//        protected int x;
+//        protected int y;
+//
+//        public Center(int x, int y) {
+//            this.x = x;
+//            this.y = y;
+//        }
+//
+//        /**
+//         * 葉表 X ゲット
+//         * @return
+//         */
+//        public int getX() {
+//            return x;
+//        }
+//
+//        /**
+//         * 座標 Y ゲット
+//         * @return
+//         */
+//        public int getY() {
+//            return y;
+//        }
+//    }
     protected BallCenter center = new BallCenter(); // 中心座標
 
     // 移動に関するデータ
@@ -126,14 +138,14 @@ public class Ball {
 
     /**
      * ボールの左位置をセット
-     * @param ball_left
+     * @param left
      */
     public void setLeft(int left) {
         this.left = left;
     }
 
     /**
-     * ボールの左位置をゲット
+     * ボールの右位置をゲット
      * @return
      */
     public int getRight() {
@@ -190,30 +202,47 @@ public class Ball {
      *  表示更新
      */
     public void updateDisplay(Canvas offscreen, List<Wall> walls, List<Block> blocks, long now_time) {
+        // MyFurfaceView から画面を操作するために SurfaceHolder を取得
         SurfaceHolder holder = parentView.getSurfaceHolder();
+        // SurfaceHolder を無事ゲットできたら
         if (holder != null) {
+            //++ 以下、前の画面更新から今までの時間で衝突した全部のブロックと壁に対応する処理
+            // 前の画面更新時間
             long past_time = updatedTime;
-//            updatedTime = System.currentTimeMillis();
+            // 今の時間
             updatedTime = now_time;
-//            String msg = String.format("経過時間 [%d] ms", (mTime - past_time));
-//            Log.d("debug", msg);
+            // 経過時間
+            long elapsed_time = updatedTime - past_time;
+            long elapsed_time2 = 0;
+            Log.d("debug", String.format("経過時間 [%d] ms", elapsed_time));
+            // 前の画面更新時間が 0より大きかったら 有効
             if (past_time > 0) {
+                // 計算で経過時間を管理するためのインタフェースオブジェクトを生成
                 UpdateDisplayIf update_display_if = new UpdateDisplayIf();
-                update_display_if.setElapsedTime(updatedTime - past_time);    // 経過時間
-                update_display_if.setElapsedTime2(0);
+                // 経過時間をセット
+                update_display_if.setElapsedTime(elapsed_time);
+                // 衝突までの時間を初期化
+                update_display_if.setElapsedTime2(elapsed_time2);
+                // 衝突フラグを初期化
                 boolean hit_flg = false;
 
+                // 経過時間内に衝突したブロックや壁がなくなるまでループ
                 do {
-                    // ブロックとの衝突判定
-                    long elapsed_time = update_display_if.getElapsedTime() - update_display_if.getElapsedTime2();
-                    long elapsed_time2 = 0;
+                    //++ ブロックや壁との衝突判定
+                    // 衝突後の経過時間に設定しなおし
+                    elapsed_time = update_display_if.getElapsedTime() - update_display_if.getElapsedTime2();
+                    // 衝突までの時間を再度初期化
+                    elapsed_time2 = 0;
+                    // インターフェースに設定しなおし
                     update_display_if.setElapsedTime(elapsed_time);    // 経過時間
                     update_display_if.setElapsedTime2(elapsed_time2);
+                    // 衝突フラグを設定しなおし
                     hit_flg = false;
-                    long necessary_time_to_hit = 0;
-                    // ブロックとの衝突判定
+                    HitProcessInterface necessary_time_to_hit = null;
+                    // ブロックとの衝突判定 ブロックの数だけループ
                     for (Block block : blocks) {
-                        HitProcessInterface tmp_necessary_time_to_hit = block.calcNecessaryTimeToHit(this, update_display_if);
+//                        HitProcessInterface tmp_necessary_time_to_hit = block.calcNecessaryTimeToHit(this, update_display_if);
+                        HitProcessInterface tmp_necessary_time_to_hit = block.checkHit(this, update_display_if);
                         if (tmp_necessary_time_to_hit != null && tmp_necessary_time_to_hit.getHitableMsec() < elapsed_time) {
                             if () {
 
@@ -231,7 +260,8 @@ public class Ball {
 //                        long necessary_time_to_hit = 0;
                         int wall_count = 0;
                         for (Wall wall : walls) {
-                            long tmp_necessary_time_to_hit = wall.calcNecessaryTimeToHit(this);
+//                            long tmp_necessary_time_to_hit = wall.calcNecessaryTimeToHit(this);
+                            tmp_necessary_time_to_hit = wall.calcNecessaryTimeToHit(this, update_display_if);
                             if (tmp_necessary_time_to_hit != -1 && tmp_necessary_time_to_hit < elapsed_time) {
                                 if (necessary_time_to_hit == 0 || tmp_necessary_time_to_hit < necessary_time_to_hit) {
                                     hit_wall = wall;

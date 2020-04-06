@@ -92,7 +92,7 @@ public class Block {
                         if (tmp_ball_center_x >= left && tmp_ball_center_x < right) {
                             int tmp_ball_center_y = ball_center.getY() + distance_height;
                             HitProcessInterface hpi = new HitProcessInterface();
-                            hpi.setData(hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.TOP);
+                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.TOP);
                             return hpi;
                         }
                     }
@@ -117,7 +117,7 @@ public class Block {
                         if (tmp_ball_center_y >= top && tmp_ball_center_y < bottom) {
                             int tmp_ball_center_x = ball_center.getX() + distance_width;
                             HitProcessInterface hpi = new HitProcessInterface();
-                            hpi.setData(hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.LEFT);
+                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.LEFT);
                             return hpi;
                         }
                     }
@@ -145,7 +145,7 @@ public class Block {
                         if (tmp_ball_center_x >= left && tmp_ball_center_x < right) {
                             int tmp_ball_center_y = ball_center.getY() + distance_height;
                             HitProcessInterface hpi = new HitProcessInterface();
-                            hpi.setData(hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.TOP);
+                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.TOP);
                             return hpi;
                         }
                     }
@@ -170,7 +170,7 @@ public class Block {
                         if (tmp_ball_center_y >= top && tmp_ball_center_y < bottom) {
                             int tmp_ball_center_x = ball_center.getX() - distance_width;
                             HitProcessInterface hpi = new HitProcessInterface();
-                            hpi.setData(hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.RIGHT);
+                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.RIGHT);
                             return hpi;
                         }
                     }
@@ -198,7 +198,7 @@ public class Block {
                         if (tmp_ball_center_x >= left && tmp_ball_center_x < right) {
                             int tmp_ball_center_y = ball_center.getY() - distance_height;
                             HitProcessInterface hpi = new HitProcessInterface();
-                            hpi.setData(hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.BOTTOM);
+                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.BOTTOM);
                             return hpi;
                         }
                     }
@@ -223,7 +223,7 @@ public class Block {
                         if (tmp_ball_center_y >= top && tmp_ball_center_y < bottom) {
                             int tmp_ball_center_x = ball_center.getX() - distance_width;
                             HitProcessInterface hpi = new HitProcessInterface();
-                            hpi.setData(hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.RIGHT);
+                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.RIGHT);
                             return hpi;
                         }
                     }
@@ -251,7 +251,7 @@ public class Block {
                         if (tmp_ball_center_x >= left && tmp_ball_center_x < right) {
                             int tmp_ball_center_y = ball_center.getY() - distance_height;
                             HitProcessInterface hpi = new HitProcessInterface();
-                            hpi.setData(hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.BOTTOM);
+                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.BOTTOM);
                             return hpi;
                         }
                     }
@@ -276,7 +276,7 @@ public class Block {
                         if (tmp_ball_center_y >= top && tmp_ball_center_y < bottom) {
                             int tmp_ball_center_x = ball_center.getX() + distance_width;
                             HitProcessInterface hpi = new HitProcessInterface();
-                            hpi.setData(hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.LEFT);
+                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.LEFT);
                             return hpi;
                         }
                     }
@@ -291,10 +291,16 @@ public class Block {
      * @param ball
      * @return
      */
-    public boolean checkHit(Ball ball, UpdateDisplayIf update_display_if, HitProcessInterface hpi) {
-        boolean result_check = false;
+//    public boolean checkHit(Ball ball, UpdateDisplayIf update_display_if, HitProcessInterface hpi) {
+    public HitProcessInterface checkHit(Ball ball, UpdateDisplayIf update_display_if) {
+//      boolean result_check = false;
+        // リターンデータ
+        HitProcessInterface hpi = null;
+        // このブロックがすでに画面から消えていたら
         if (!isDisplay) {
-            return result_check;
+//            return result_check;
+            // nullでリターン
+            return hpi;
         }
 
         BallCenter ball_center = ball.getCenter();
@@ -307,6 +313,15 @@ public class Block {
         int bottom = top + height;
         int right = left + width;
 
+        // 衝突チェック
+        hpi = calcNecessaryTimeToHit(ball, update_display_if);
+        // 衝突なし
+        if (hpi == null) {
+            // null でリターン
+            return hpi;
+        }
+
+        //++ バウンド後のボールデータ(反射角)を計算
         long hitable_msec = hpi.getHitableMsec();
         BallCenter new_ball_center = new BallCenter();
         new_ball_center.setCoordinate(hpi.getNewBallCenterX(), hpi.getNewBallCenterY());
@@ -357,12 +372,14 @@ public class Block {
                 double incidence_angle = angle;
                 angle = 360 - Math.abs(((angle - (incidence_angle * 2)) % 360));
 
-                // ボールにデータをセット
-                ball.setLeft(new_ball_center.getX() - (int) ball.getRadius());
-                ball.setTop(new_ball_center.getY() + (int) ball.getRadius());
-                ball.setAngle(angle);
-                // 衝突したフラグをセット
-                result_check = true;
+//                // ボールにデータをセット
+//                ball.setLeft(new_ball_center.getX() - (int) ball.getRadius());
+//                ball.setTop(new_ball_center.getY() + (int) ball.getRadius());
+//                ball.setAngle(angle);
+//                // 衝突したフラグをセット
+//                result_check = true;
+                // update_display_if にボールデータ（反射角）をセット
+                hpi.setNewAngle(angle);
             }
             // *** ブロック左面との衝突
             else if (hit_side == HitProcessInterface.HitSide.LEFT) {
@@ -406,12 +423,14 @@ public class Block {
                 double incidence_angle = 90 - angle;
                 angle = (angle + (incidence_angle * 2)) % 360;
 
-                // ボールにデータをセット
-                ball.setLeft(new_ball_center.getX() - (int) ball.getRadius());
-                ball.setTop(new_ball_center.getY() + (int) ball.getRadius());
-                ball.setAngle(angle);
-                // 衝突したフラグをセット
-                result_check = true;
+//                // ボールにデータをセット
+//                ball.setLeft(new_ball_center.getX() - (int) ball.getRadius());
+//                ball.setTop(new_ball_center.getY() + (int) ball.getRadius());
+//                ball.setAngle(angle);
+//                // 衝突したフラグをセット
+//                result_check = true;
+                // update_display_if にボールデータ（反射角）をセット
+                hpi.setNewAngle(angle);
             }
         }
         // 進行方向 左下
@@ -458,12 +477,14 @@ public class Block {
                 double incidence_angle = 180 - angle;
                 angle = (angle + (incidence_angle * 2)) % 360;
 
-                // ボールにデータをセット
-                ball.setLeft(new_ball_center.getX() - (int) ball.getRadius());
-                ball.setTop(new_ball_center.getY() + (int) ball.getRadius());
-                ball.setAngle(angle);
-                // 衝突したフラグをセット
-                result_check = true;
+//                // ボールにデータをセット
+//                ball.setLeft(new_ball_center.getX() - (int) ball.getRadius());
+//                ball.setTop(new_ball_center.getY() + (int) ball.getRadius());
+//                ball.setAngle(angle);
+//                // 衝突したフラグをセット
+//                result_check = true;
+                // update_display_if にボールデータ（反射角）をセット
+                hpi.setNewAngle(angle);
             }
             // *** ブロック右面との衝突
             else if (hit_side == HitProcessInterface.HitSide.RIGHT) {
@@ -507,12 +528,14 @@ public class Block {
                 double incidence_angle = angle - 90;
                 angle = (angle - (incidence_angle * 2)) % 360;
 
-                // ボールにデータをセット
-                ball.setLeft(new_ball_center.getX() - (int) ball.getRadius());
-                ball.setTop(new_ball_center.getY() + (int) ball.getRadius());
-                ball.setAngle(angle);
-                // 衝突したフラグをセット
-                result_check = true;
+//                // ボールにデータをセット
+//                ball.setLeft(new_ball_center.getX() - (int) ball.getRadius());
+//                ball.setTop(new_ball_center.getY() + (int) ball.getRadius());
+//                ball.setAngle(angle);
+//                // 衝突したフラグをセット
+//                result_check = true;
+                // update_display_if にボールデータ（反射角）をセット
+                hpi.setNewAngle(angle);
             }
         }
         // 進行方向 左上
@@ -553,21 +576,23 @@ public class Block {
 //                }
             // 衝突までの時間を保存
 //                            elapsed_time2 = hitable_msec;
-            update_display_if.setElapsedTime2(update_display_if.getElapsedTime2() + hitable_msec);
+                update_display_if.setElapsedTime2(update_display_if.getElapsedTime2() + hitable_msec);
 
-            // バウンド角（反射角）の計算
-            double incidence_angle = angle - 180;
-            angle = (angle - (incidence_angle * 2)) % 360;
+                // バウンド角（反射角）の計算
+                double incidence_angle = angle - 180;
+                angle = (angle - (incidence_angle * 2)) % 360;
 
-            // ボールにデータをセット
-            ball.setLeft(new_ball_center.getX() - (int) ball.getRadius());
-            ball.setTop(new_ball_center.getY() + (int) ball.getRadius());
-            ball.setAngle(angle);
-            // 衝突したフラグをセット
-            result_check = true;
-        }
-        // *** ブロック右面との衝突
-        else if (hit_side == HitProcessInterface.HitSide.RIGHT) {
+//            // ボールにデータをセット
+//            ball.setLeft(new_ball_center.getX() - (int) ball.getRadius());
+//            ball.setTop(new_ball_center.getY() + (int) ball.getRadius());
+//            ball.setAngle(angle);
+//            // 衝突したフラグをセット
+//            result_check = true;
+                // update_display_if にボールデータ（反射角）をセット
+                hpi.setNewAngle(angle);
+            }
+            // *** ブロック右面との衝突
+            else if (hit_side == HitProcessInterface.HitSide.RIGHT) {
 ////                // ボールとブロックとの距離 縦方向
 ////                int distance_height = ball_bottom - bottom;
 //                // ボールとブロックとの距離 横方向
@@ -609,12 +634,14 @@ public class Block {
                 double incidence_angle = 270 - angle;
                 angle = (angle + (incidence_angle * 2)) % 360;
 
-                // ボールにデータをセット
-                ball.setLeft(new_ball_center.getX() - (int) ball.getRadius());
-                ball.setTop(new_ball_center.getY() + (int) ball.getRadius());
-                ball.setAngle(angle);
-                // 衝突したフラグをセット
-                result_check = true;
+//                // ボールにデータをセット
+//                ball.setLeft(new_ball_center.getX() - (int) ball.getRadius());
+//                ball.setTop(new_ball_center.getY() + (int) ball.getRadius());
+//                ball.setAngle(angle);
+//                // 衝突したフラグをセット
+//                result_check = true;
+                // update_display_if にボールデータ（反射角）をセット
+                hpi.setNewAngle(angle);
             }
         }
         // 進行方向 右上
@@ -661,12 +688,14 @@ public class Block {
                 double incidence_angle = 360 - angle;
                 angle = (angle + (incidence_angle * 2)) % 360;
 
-                // ボールにデータをセット
-                ball.setLeft(new_ball_center.getX() - (int)ball.getRadius());
-                ball.setTop(new_ball_center.getY() + (int)ball.getRadius());
-                ball.setAngle(angle);
-                // 衝突したフラグをセット
-                result_check = true;
+//                // ボールにデータをセット
+//                ball.setLeft(new_ball_center.getX() - (int)ball.getRadius());
+//                ball.setTop(new_ball_center.getY() + (int)ball.getRadius());
+//                ball.setAngle(angle);
+//                // 衝突したフラグをセット
+//                result_check = true;
+                // update_display_if にボールデータ（反射角）をセット
+                hpi.setNewAngle(angle);
             }
             // *** ブロック左面との衝突
             else if (hit_side == HitProcessInterface.HitSide.LEFT) {
@@ -710,12 +739,14 @@ public class Block {
                 double incidence_angle = angle - 270;
                 angle = (angle - (incidence_angle * 2)) % 360;
 
-                // ボールにデータをセット
-                ball.setLeft(new_ball_center.getX() - (int)ball.getRadius());
-                ball.setTop(new_ball_center.getY() + (int)ball.getRadius());
-                ball.setAngle(angle);
-                // 衝突したフラグをセット
-                result_check = true;
+//                // ボールにデータをセット
+//                ball.setLeft(new_ball_center.getX() - (int)ball.getRadius());
+//                ball.setTop(new_ball_center.getY() + (int)ball.getRadius());
+//                ball.setAngle(angle);
+//                // 衝突したフラグをセット
+//                result_check = true;
+                // update_display_if にボールデータ（反射角）をセット
+                hpi.setNewAngle(angle);
             }
         }
 
