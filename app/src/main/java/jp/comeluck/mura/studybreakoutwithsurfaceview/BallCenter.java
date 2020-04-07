@@ -1,8 +1,8 @@
 package jp.comeluck.mura.studybreakoutwithsurfaceview;
 
 public class BallCenter {
-    protected int x;    // 座標 X
-    protected int y;    // 座標 Y
+    protected double x;    // 座標 X
+    protected double y;    // 座標 Y
 
     /**
      * 座標をセット
@@ -10,7 +10,7 @@ public class BallCenter {
      * @param x
      * @param y
      */
-    public void setCoordinate(int x, int y) {
+    public void setCoordinate(double x, double y) {
         this.x = x;
         this.y = y;
     }
@@ -19,7 +19,7 @@ public class BallCenter {
      * X のゲッター
      * @return
      */
-    public int getX() {
+    public double getX() {
         return x;
     }
 
@@ -27,7 +27,7 @@ public class BallCenter {
      * y のゲッター
      * @return
      */
-    public int getY() {
+    public double getY() {
         return y;
     }
 }

@@ -6,13 +6,13 @@ import android.graphics.Paint;
 
 public class Racket {
     // ラケットのデータ
-    protected int height = 0;
-    protected int width = 0;
+    protected double height = 0;
+    protected double width = 0;
     protected int fillColor = Color.WHITE;
 
     // 移動に関するデータ
-    protected int left = 0;
-    protected int top = 0;
+    protected double left = 0;
+    protected double top = 0;
 
     /**
      * 初期化
@@ -20,7 +20,7 @@ public class Racket {
      * @param width
      * @param color
      */
-    public void init(int height, int width, int color) {
+    public void init(double height, double width, int color) {
         this.height = height;
         this.width = width;
         this.fillColor = color;
@@ -28,19 +28,19 @@ public class Racket {
 
     /**
      * 画面に描画する
-     * @param left
-     * @param top
+     * @param center_x
+     * @param view_bottom
      * @param canvas
      */
-    public void updateDisplay(int center_x, int view_bottom, Canvas canvas) {
-        float left = center_x - (width / 2);
-        float right = center_x + (width / 2);
-        float top = view_bottom - height;
-        float bottom = view_bottom;
+    public void updateDisplay(double center_x, double view_bottom, Canvas canvas) {
+        double left = center_x - (width / 2);
+        double right = center_x + (width / 2);
+        double top = view_bottom - height;
+        double bottom = view_bottom;
 
         Paint paint = new Paint();
         paint.setColor(fillColor);
         //paint.setFilterBitmap(true);
-        canvas.drawRect(left, top, right, bottom, paint);
+        canvas.drawRect((int)left, (int)top, (int)right, (int)bottom, paint);
     }
 }

@@ -9,10 +9,10 @@ import android.util.Log;
  * ブロック クラス
  */
 public class Block {
-    protected int left;
-    protected int top;
-    protected int height;
-    protected int width;
+    protected double left;
+    protected double top;
+    protected double height;
+    protected double width;
     protected int fillColor = Color.CYAN;
 
     protected boolean isDisplay = true;
@@ -24,7 +24,7 @@ public class Block {
      * @param height
      * @param width
      */
-    public Block(int left, int top, int height, int width, int fill_color) {
+    public Block(double left, double top, double height, double width, int fill_color) {
         this.left = left;
         this.top = top;
         this.height = height;
@@ -60,10 +60,10 @@ public class Block {
         Paint paint = new Paint();
         paint.setColor(fillColor);
         //paint.setFilterBitmap(true);
-        float paint_left = left;
-        float paint_top = top;
-        float paint_right = paint_left + width;
-        float paint_bottom = paint_top + height;
+        float paint_left = Double.valueOf(left).floatValue();
+        float paint_top = Double.valueOf(top).floatValue();
+        float paint_right = Double.valueOf(paint_left + width).floatValue();
+        float paint_bottom = Double.valueOf(paint_top + height).floatValue();
 //        Log.d("Block", String.format("Left [%f] Top %f] Right [%f] Bottom [%f]",
 //                paint_left, paint_top, paint_right, paint_bottom));
         canvas.drawRect(paint_left, paint_top, paint_right, paint_bottom, paint);
@@ -77,14 +77,14 @@ public class Block {
 //    @Override
     public HitProcessInterface calcNecessaryTimeToHit(Ball ball, UpdateDisplayIf update_display_if) {
         BallCenter ball_center = ball.getCenter();
-        int ball_left = ball.getLeft();
-        int ball_right = ball.getRight();
-        int ball_top = ball.getTop();
-        int ball_bottom = ball.getBottom();
+        double ball_left = ball.getLeft();
+        double ball_right = ball.getRight();
+        double ball_top = ball.getTop();
+        double ball_bottom = ball.getBottom();
         double angle = ball.getAngle();
 
-        int bottom = top + height;
-        int right = left + width;
+        double bottom = top + height;
+        double right = left + width;
 
         // *** 進行角度で分岐
         // 進行方向 右下
@@ -92,19 +92,19 @@ public class Block {
             // *** ボール下点とブロック上面との衝突
             {
                 // ボールとブロックとの距離 縦方向
-                int distance_height = ball_bottom - top;
+                double distance_height = ball_bottom - top;
                 // 縦方向の距離が正の値だったら
                 if (distance_height > 0) {
                     // ボール下点とブロックの上面が同じ縦方向位置になるまでの時間
                     double radians = Math.toRadians(angle);
-                    long hitable_msec = (long)(distance_height / (ball.getSpeed() * Math.abs(Math.sin(radians))));
+                    long hitable_msec = Double.valueOf(Math.ceil(distance_height / (ball.getSpeed() * Math.abs(Math.sin(radians))))).longValue();
                     // ここまでの経過時間内に衝突の可能性あるか
                     if (hitable_msec <= update_display_if.getElapsedTime()) {
                         // ボール中心がhitable_msecの間に移動した後の横方向の位置
-                        int tmp_ball_center_x = ball_center.x + (int)((ball.getSpeed() * hitable_msec) * Math.abs(Math.cos(radians)));
+                        double tmp_ball_center_x = ball_center.x + ((ball.getSpeed() * hitable_msec) * Math.abs(Math.cos(radians)));
                         // 衝突しているか
                         if (tmp_ball_center_x >= left && tmp_ball_center_x < right) {
-                            int tmp_ball_center_y = ball_center.getY() + distance_height;
+                            double tmp_ball_center_y = ball_center.getY() + distance_height;
                             HitProcessInterface hpi = new HitProcessInterface();
                             hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.TOP);
                             return hpi;
@@ -115,19 +115,19 @@ public class Block {
             // *** ブロック左面との衝突
             {
                 // ボールとブロックとの距離 横方向
-                int distance_width = ball_right - left;
+                double distance_width = ball_right - left;
                 // 横方向の距離が正の値だったら
                 if (distance_width > 0) {
                     // ボール右点とブロックの左面が同じ横方向位置になるまでの時間
                     double radians = Math.toRadians(angle);
-                    long hitable_msec = (long)(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))));
+                    long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
                     // ここまでの経過時間内に衝突の可能性あるか
                     if (hitable_msec <= update_display_if.getElapsedTime()) {
                         // ボール中心がhitable_msecの間に移動した後の縦方向の位置
-                        int tmp_ball_center_y = ball_center.y + (int)(Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
+                        double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
                         // 衝突しているか
                         if (tmp_ball_center_y >= top && tmp_ball_center_y < bottom) {
-                            int tmp_ball_center_x = ball_center.getX() + distance_width;
+                            double tmp_ball_center_x = ball_center.getX() + distance_width;
                             HitProcessInterface hpi = new HitProcessInterface();
                             hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.LEFT);
                             return hpi;
@@ -141,19 +141,19 @@ public class Block {
             // *** ボール下点とブロック上面との衝突
             {
                 // ボールとブロックとの距離 縦方向
-                int distance_height = ball_bottom - top;
+                double distance_height = ball_bottom - top;
                 // 縦方向の距離が正の値だったら
                 if (distance_height > 0) {
                     // ボール下点とブロックの上面が同じ縦方向位置になるまでの時間
                     double radians = Math.toRadians(angle);
-                    long hitable_msec = (long)(distance_height / (ball.getSpeed() * Math.abs(Math.sin(radians))));
+                    long hitable_msec = Double.valueOf(Math.ceil(distance_height / (ball.getSpeed() * Math.abs(Math.sin(radians))))).longValue();
                     // ここまでの経過時間内に衝突の可能性あるか
                     if (hitable_msec <= update_display_if.getElapsedTime()) {
                         // ボール中心がhitable_msecの間に移動した後の横方向の位置
-                        int tmp_ball_center_x = ball_center.x - (int)((ball.getSpeed() * hitable_msec) * Math.abs(Math.cos(radians)));
+                        double tmp_ball_center_x = ball_center.x - ((ball.getSpeed() * hitable_msec) * Math.abs(Math.cos(radians)));
                         // 衝突しているか
                         if (tmp_ball_center_x >= left && tmp_ball_center_x < right) {
-                            int tmp_ball_center_y = ball_center.getY() + distance_height;
+                            double tmp_ball_center_y = ball_center.getY() + distance_height;
                             HitProcessInterface hpi = new HitProcessInterface();
                             hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.TOP);
                             return hpi;
@@ -164,19 +164,19 @@ public class Block {
             // *** ブロック右面との衝突
             {
                 // ボールとブロックとの距離 横方向
-                int distance_width = ball_left - right;
+                double distance_width = ball_left - right;
                 // 横方向の距離が正の値だったら
                 if (distance_width > 0) {
                     // ボール左点とブロックの右面が同じ横方向位置になるまでの時間
                     double radians = Math.toRadians(angle);
-                    long hitable_msec = (long)(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))));
+                    long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
                     // ここまでの経過時間内に衝突の可能性あるか
                     if (hitable_msec <= update_display_if.getElapsedTime()) {
                         // ボール中心がhitable_msecの間に移動した後の縦方向の位置
-                        int tmp_ball_center_y = ball_center.y + (int)((ball.getSpeed() * hitable_msec) * (Math.abs(Math.sin(radians))));
+                        double tmp_ball_center_y = ball_center.y + ((ball.getSpeed() * hitable_msec) * (Math.abs(Math.sin(radians))));
                         // 衝突しているか
                         if (tmp_ball_center_y >= top && tmp_ball_center_y < bottom) {
-                            int tmp_ball_center_x = ball_center.getX() - distance_width;
+                            double tmp_ball_center_x = ball_center.getX() - distance_width;
                             HitProcessInterface hpi = new HitProcessInterface();
                             hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.RIGHT);
                             return hpi;
@@ -190,19 +190,19 @@ public class Block {
             // *** ボール上点とブロック下面との衝突
             {
                 // ボールとブロックとの距離 縦方向
-                int distance_height =  ball_top - bottom;
+                double distance_height = ball_top - bottom;
                 // 縦方向の距離が正の値だったら
                 if (distance_height > 0) {
                     // ボール下点とブロックの上面が同じ縦方向位置になるまでの時間
                     double radians = Math.toRadians(angle);
-                    long hitable_msec = (long)(distance_height / (ball.getSpeed() * Math.abs(Math.sin(radians))));
+                    long hitable_msec = Double.valueOf(Math.ceil(distance_height / (ball.getSpeed() * Math.abs(Math.sin(radians))))).longValue();
                     // ここまでの経過時間内に衝突の可能性あるか
                     if (hitable_msec <= update_display_if.getElapsedTime()) {
                         // ボール中心がhitable_msecの間に移動した後の横方向の位置
-                        int tmp_ball_center_x = ball_center.x - (int)((ball.getSpeed() * hitable_msec) * (Math.abs(Math.cos(radians))));
+                        double tmp_ball_center_x = ball_center.x - ((ball.getSpeed() * hitable_msec) * (Math.abs(Math.cos(radians))));
                         // 衝突しているか
                         if (tmp_ball_center_x >= left && tmp_ball_center_x < right) {
-                            int tmp_ball_center_y = ball_center.getY() - distance_height;
+                            double tmp_ball_center_y = ball_center.getY() - distance_height;
                             HitProcessInterface hpi = new HitProcessInterface();
                             hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.BOTTOM);
                             return hpi;
@@ -213,19 +213,19 @@ public class Block {
             // *** ブロック右面との衝突
             {
                 // ボールとブロックとの距離 横方向
-                int distance_width = ball_left - right;
+                double distance_width = ball_left - right;
                 // 横方向の距離が正の値だったら
                 if (distance_width > 0) {
                     // ボール左点とブロックの右面が同じ横方向位置になるまでの時間
                     double radians = Math.toRadians(angle);
-                    long hitable_msec = (long)(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))));
+                    long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
                     // ここまでの経過時間内に衝突の可能性あるか
                     if (hitable_msec <= update_display_if.getElapsedTime()) {
                         // ボール中心がhitable_msecの間に移動した後の縦方向の位置
-                        int tmp_ball_center_y = ball_center.y - (int)((ball.getSpeed() * hitable_msec) * Math.abs(Math.sin(radians)));
+                        double tmp_ball_center_y = ball_center.y - ((ball.getSpeed() * hitable_msec) * Math.abs(Math.sin(radians)));
                         // 衝突しているか
                         if (tmp_ball_center_y >= top && tmp_ball_center_y < bottom) {
-                            int tmp_ball_center_x = ball_center.getX() - distance_width;
+                            double tmp_ball_center_x = ball_center.getX() - distance_width;
                             HitProcessInterface hpi = new HitProcessInterface();
                             hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.RIGHT);
                             return hpi;
@@ -239,19 +239,19 @@ public class Block {
             // *** ボール上点とブロック下面との衝突
             {
                 // ボールとブロックとの距離 縦方向
-                int distance_height =  ball_top - bottom;
+                double distance_height =  ball_top - bottom;
                 // 縦方向の距離が正の値だったら
                 if (distance_height > 0) {
                     // ボール下点とブロックの上面が同じ縦方向位置になるまでの時間
                     double radians = Math.toRadians(angle);
-                    long hitable_msec = (long)(distance_height / (ball.getSpeed() * Math.abs(Math.sin(radians))));
+                    long hitable_msec = Double.valueOf(Math.ceil(distance_height / (ball.getSpeed() * Math.abs(Math.sin(radians))))).longValue();
                     // ここまでの経過時間内に衝突の可能性あるか
                     if (hitable_msec <= update_display_if.getElapsedTime()) {
                         // ボール中心がhitable_msecの間に移動した後の横方向の位置
-                        int tmp_ball_center_x = ball_center.x + (int)((ball.getSpeed() * hitable_msec) * Math.abs(Math.cos(radians)));
+                        double tmp_ball_center_x = ball_center.x + ((ball.getSpeed() * hitable_msec) * Math.abs(Math.cos(radians)));
                         // 衝突しているか
                         if (tmp_ball_center_x >= left && tmp_ball_center_x < right) {
-                            int tmp_ball_center_y = ball_center.getY() - distance_height;
+                            double tmp_ball_center_y = ball_center.getY() - distance_height;
                             HitProcessInterface hpi = new HitProcessInterface();
                             hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.BOTTOM);
                             return hpi;
@@ -262,19 +262,19 @@ public class Block {
             // *** ブロック左面との衝突
             {
                 // ボールとブロックとの距離 横方向
-                int distance_width = left - ball_right;
+                double distance_width = left - ball_right;
                 // 横方向の距離が正の値だったら
                 if (distance_width > 0) {
                     // ボール左点とブロックの右面が同じ横方向位置になるまでの時間
                     double radians = Math.toRadians(angle);
-                    long hitable_msec = (long)(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))));
+                    long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
                     // ここまでの経過時間内に衝突の可能性あるか
                     if (hitable_msec <= update_display_if.getElapsedTime()) {
                         // ボール中心がhitable_msecの間に移動した後の縦方向の位置
-                        int tmp_ball_center_y = ball_center.y - (int)((ball.getSpeed() * hitable_msec) * Math.abs(Math.sin(radians)));
+                        double tmp_ball_center_y = ball_center.y - ((ball.getSpeed() * hitable_msec) * Math.abs(Math.sin(radians)));
                         // 衝突しているか
                         if (tmp_ball_center_y >= top && tmp_ball_center_y < bottom) {
-                            int tmp_ball_center_x = ball_center.getX() + distance_width;
+                            double tmp_ball_center_x = ball_center.getX() + distance_width;
                             HitProcessInterface hpi = new HitProcessInterface();
                             hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.LEFT);
                             return hpi;
@@ -292,6 +292,7 @@ public class Block {
      * @return
      */
     public HitProcessInterface checkHit(Ball ball, UpdateDisplayIf update_display_if) {
+        Log.d("Block", "in checkHit()");
         // リターンデータ
         HitProcessInterface hpi = null;
         // このブロックがすでに画面から消えていたら
@@ -301,14 +302,14 @@ public class Block {
         }
 
         BallCenter ball_center = ball.getCenter();
-        int ball_left = ball.getLeft();
-        int ball_right = ball.getRight();
-        int ball_top = ball.getTop();
-        int ball_bottom = ball.getBottom();
+        double ball_left = ball.getLeft();
+        double ball_right = ball.getRight();
+        double ball_top = ball.getTop();
+        double ball_bottom = ball.getBottom();
         double angle = ball.getAngle();
 
-        int bottom = top + height;
-        int right = left + width;
+        double bottom = top + height;
+        double right = left + width;
 
         // 衝突チェック
         hpi = calcNecessaryTimeToHit(ball, update_display_if);

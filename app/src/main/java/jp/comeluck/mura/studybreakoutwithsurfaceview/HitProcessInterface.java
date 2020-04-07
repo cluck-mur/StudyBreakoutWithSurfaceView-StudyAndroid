@@ -13,8 +13,8 @@ public class HitProcessInterface {
     protected Block block = null;
     protected Wall wall = null;
     protected long hitableMsec;     // 衝突までの時間 ( -1 は衝突なし)
-    protected int newBallCenterX;   // 衝突時のボールセンターのX座標
-    protected int newBallCenterY;   // 衝突時のボールセンターのY座標
+    protected double newBallCenterX;   // 衝突時のボールセンターのX座標
+    protected double newBallCenterY;   // 衝突時のボールセンターのY座標
     protected double newAngle;      // 衝突後の進行方向
     protected HitSide hitSide;      // 壁やブロックのどの側面に衝突したか
 
@@ -24,7 +24,7 @@ public class HitProcessInterface {
      * @param new_ball_center_X
      * @param new_ball_center_y
      */
-    private void setData(long hitable_msec, int new_ball_center_X, int new_ball_center_y, HitSide hit_side) {
+    private void setData(long hitable_msec, double new_ball_center_X, double new_ball_center_y, HitSide hit_side) {
         hitableMsec = hitable_msec;
         newBallCenterX = new_ball_center_X;
         newBallCenterY = new_ball_center_y;
@@ -39,7 +39,7 @@ public class HitProcessInterface {
      * @param new_ball_center_y
      * @param hit_side
      */
-    public void setData(Block block, long hitable_msec, int new_ball_center_X, int new_ball_center_y, HitSide hit_side) {
+    public void setData(Block block, long hitable_msec, double new_ball_center_X, double new_ball_center_y, HitSide hit_side) {
         this.block = block;
         setData(hitable_msec, new_ball_center_X, new_ball_center_y, hit_side);
     }
@@ -52,7 +52,7 @@ public class HitProcessInterface {
      * @param new_ball_center_y
      * @param hit_side
      */
-    public void setData(Wall wall, long hitable_msec, int new_ball_center_X, int new_ball_center_y, HitSide hit_side) {
+    public void setData(Wall wall, long hitable_msec, double new_ball_center_X, double new_ball_center_y, HitSide hit_side) {
         this.wall = wall;
         setData(hitable_msec, new_ball_center_X, new_ball_center_y, hit_side);
     }
@@ -109,7 +109,7 @@ public class HitProcessInterface {
      * 衝突時のボールセンターのX座標のゲッター
      * @return
      */
-    public int getNewBallCenterX() {
+    public double getNewBallCenterX() {
         return newBallCenterX;
     }
 
@@ -117,7 +117,7 @@ public class HitProcessInterface {
      * 衝突時のボールセンターのX座標のセッター
      * @param newBallCenterX
      */
-    public void setNewBallCenterX(int newBallCenterX) {
+    public void setNewBallCenterX(double newBallCenterX) {
         this.newBallCenterX = newBallCenterX;
     }
 
@@ -125,7 +125,7 @@ public class HitProcessInterface {
      * 衝突時のボールセンターのY座標のゲッター
      * @return
      */
-    public int getNewBallCenterY() {
+    public double getNewBallCenterY() {
         return newBallCenterY;
     }
 
@@ -133,7 +133,7 @@ public class HitProcessInterface {
      * 衝突時のボールセンターのY座標のセッター
      * @param newBallCenterY
      */
-    public void setNewBallCenterY(int newBallCenterY) {
+    public void setNewBallCenterY(double newBallCenterY) {
        this.newBallCenterY = newBallCenterY;
     }
 

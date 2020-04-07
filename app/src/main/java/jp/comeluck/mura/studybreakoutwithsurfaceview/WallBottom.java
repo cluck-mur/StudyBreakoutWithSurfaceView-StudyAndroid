@@ -10,7 +10,7 @@ public class WallBottom extends Wall {
      * @param height
      * @param width
      */
-    public WallBottom(int left, int top, int height, int width) {
+    public WallBottom(double left, double top, double height, double width) {
         super(left, top, height, width);
     }
 
@@ -23,37 +23,36 @@ public class WallBottom extends Wall {
 //    public long calcNecessaryTimeToHit(Ball ball, UpdateDisplayIf update_display_if) {
     public HitProcessInterface calcNecessaryTimeToHit(Ball ball, UpdateDisplayIf update_display_if) {
         BallCenter ball_center = ball.getCenter();
-        int ball_left = ball.getLeft();
-        int ball_right = ball.getRight();
-        int ball_top = ball.getTop();
-        int ball_bottom = ball.getBottom();
+        double ball_left = ball.getLeft();
+        double ball_right = ball.getRight();
+        double ball_top = ball.getTop();
+        double ball_bottom = ball.getBottom();
         double angle = ball.getAngle();
 
-        int bottom = top + height;
-        int right = left + width;
+        double bottom = top + height;
+        double right = left + width;
 
         // ボールと壁との距離 縦方向
-        int distance_height = calcDistanceHeight(ball);
+        double distance_height = calcDistanceHeight(ball);
 
         if ((angle >= 90 && angle < 180) || (angle >= 0 && angle < 90)) {
             // ボール下点と上壁が同じ縦方向位置になるまでの時間
             double radians = Math.toRadians(angle);
-            long hitable_msec = (long)(distance_height / (ball.getSpeed() * Math.abs(Math.sin(radians))));
+            long hitable_msec = Double.valueOf(Math.ceil(distance_height / (ball.getSpeed() * Math.abs(Math.sin(radians))))).longValue();
             if (hitable_msec < 0) {
                 Log.d("WallBottom", "hitable_msec がマイナス");
             }
-
             // ここまでの経過時間内に衝突の可能性あるか
             if (hitable_msec != -1 && hitable_msec <= update_display_if.getElapsedTime()) {
                 // ボール中心がhitable_msecの間に移動した後の横方向の位置
-                int move_x = (int) ((ball.getSpeed() * hitable_msec) * Math.abs(Math.cos(radians)));
-                int tmp_ball_center_x = ball_center.x + move_x;
+                double move_x = (ball.getSpeed() * hitable_msec) * Math.abs(Math.cos(radians));
+                double tmp_ball_center_x = ball_center.x + move_x;
                 // 壁の幅に収まっていたら衝突
                 if (tmp_ball_center_x >= left + ball.getRadius() && tmp_ball_center_x < (left + width - ball.getRadius())) {
                     // Y方向の移動距離
-                    int move_y = (int) ((ball.getSpeed() * hitable_msec) * Math.abs(Math.sin(radians)));
+                    double move_y = (ball.getSpeed() * hitable_msec) * Math.abs(Math.sin(radians));
                     // Y位置を計算
-                    int tmp_ball_center_y = ball_center.y + move_y;
+                    double tmp_ball_center_y = ball_center.y + move_y;
 
                     HitProcessInterface hpi = new HitProcessInterface();
                     hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y, HitProcessInterface.HitSide.TOP);
@@ -77,16 +76,16 @@ public class WallBottom extends Wall {
         boolean ret_bool = false;
 
         BallCenter ball_center = ball.getCenter();
-        int ball_top = ball.getTop();
-        int ball_left = ball.getLeft();
-        int ball_bottom = ball.getBottom();
+        double ball_top = ball.getTop();
+        double ball_left = ball.getLeft();
+        double ball_bottom = ball.getBottom();
         double angle = ball.getAngle();
 
-        int bottom = top + height;
-        int right = left + width;
+        double bottom = top + height;
+        double right = left + width;
 
         // ボールと壁との距離 縦方向
-        int distance_height = calcDistanceHeight(ball);
+        double distance_height = calcDistanceHeight(ball);
         // 縦方向の距離が正の値だったら
         if (distance_height > 0) {
             // ボールが衝突するまでの時間
@@ -116,16 +115,16 @@ public class WallBottom extends Wall {
      * @param ball
      * @return
      */
-    protected int calcDistanceHeight(Ball ball) {
+    protected double calcDistanceHeight(Ball ball) {
         BallCenter ball_center = ball.getCenter();
-        int ball_left = ball.getLeft();
-        int ball_right = ball.getRight();
-        int ball_top = ball.getTop();
-        int ball_bottom = ball.getBottom();
+        double ball_left = ball.getLeft();
+        double ball_right = ball.getRight();
+        double ball_top = ball.getTop();
+        double ball_bottom = ball.getBottom();
         double angle = ball.getAngle();
 
-        int bottom = top + height;
-        int right = left + width;
+        double bottom = top + height;
+        double right = left + width;
 
         return top - ball_bottom;
     }

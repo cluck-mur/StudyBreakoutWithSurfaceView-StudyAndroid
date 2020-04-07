@@ -16,14 +16,14 @@ public class Ball {
     protected MySurfaceView parentView;
 
     // ボールデータ
-    protected float radius = 0;
+    protected double radius = 0;
     protected int fillColor = Color.WHITE;
     protected BallCenter center = new BallCenter(); // 中心座標
 
     // 移動に関するデータ
     private double speed = 0.5d; // px/ms
-    private int left = 1;
-    private int top = 1;
+    private double left = 1;
+    private double top = 1;
     private double angle = 60;
 
     // 経過時間の管理
@@ -48,7 +48,7 @@ public class Ball {
     /**
      * 初期化
      */
-    public void init(int position_left, int position_top, double angle, double speed, float radius, int color) {
+    public void init(double position_left, double position_top, double angle, double speed, float radius, int color) {
         init();
         this.left = position_left;
         this.top = position_top;
@@ -63,7 +63,7 @@ public class Ball {
      * 直径を取得
      * @return
      */
-    public float getRadius() {
+    public double getRadius() {
         return this.radius;
     }
 
@@ -71,7 +71,7 @@ public class Ball {
      * 直径をセット
      * @param radius
      */
-    public void setRadius(float radius) {
+    public void setRadius(double radius) {
         this.radius = radius;
     }
 
@@ -86,7 +86,7 @@ public class Ball {
      * @param x
      * @param y
      */
-    public void setCenter(int x, int y) {
+    public void setCenter(double x, double y) {
         this.center.setCoordinate(x, y);
     }
 
@@ -96,9 +96,9 @@ public class Ball {
      * @param top
      * @param radius
      */
-    public void setCenter(int left, int top, float radius) {
-        int x = left + (int)radius;
-        int y = top + (int)radius;
+    public void setCenter(double left, double top, double radius) {
+        double x = left + radius;
+        double y = top + radius;
         this.center.setCoordinate(x, y);
     }
 
@@ -106,7 +106,7 @@ public class Ball {
      * ボールの左位置をゲット
      * @return
      */
-    public int getLeft() {
+    public double getLeft() {
         return this.left;
     }
 
@@ -114,7 +114,7 @@ public class Ball {
      * ボールの左位置をセット
      * @param left
      */
-    public void setLeft(int left) {
+    public void setLeft(double left) {
         this.left = left;
     }
 
@@ -122,14 +122,14 @@ public class Ball {
      * ボールの右位置をゲット
      * @return
      */
-    public int getRight() {
-        return (int)(this.left + (this.radius * 2));
+    public double getRight() {
+        return this.left + (this.radius * 2);
     }
 
     /**
      * ボールの上位置をゲット
      */
-    public int getTop() {
+    public double getTop() {
         return top;
     }
 
@@ -137,15 +137,15 @@ public class Ball {
      * ボールの上位置をセット
      * @param ball_top
      */
-    public void setTop(int ball_top) {
+    public void setTop(double ball_top) {
         top = ball_top;
     }
 
     /**
      * ボールの下位置をゲット
      */
-    public int getBottom() {
-        return (int)(top + (radius * 2));
+    public double getBottom() {
+        return top + (radius * 2);
     }
 
     /**
@@ -177,8 +177,14 @@ public class Ball {
      */
     public void updateDisplay(Canvas offscreen, List<Wall> walls, List<Block> blocks, long now_time) {
         // デバッグ
-        Log.d("Ball", String.format("loopCount [%d]", loopCount));
+        Log.d("Ball", String.format("in updateDisplay(), loopCount [%d]", loopCount));
         loopCount++;
+        if (loopCount == 1) {
+            Log.d("Ball", String.format("screen size width [%d] height [%d]", offscreen.getWidth(), offscreen.getHeight()));
+        }
+        if (loopCount > 50) {
+            Log.d("Ball", "デバッグ用 ストッパー");
+        }
 
         // MyFurfaceView から画面を操作するために SurfaceHolder を取得
         SurfaceHolder holder = parentView.getSurfaceHolder();
@@ -192,7 +198,7 @@ public class Ball {
             // 経過時間
             long elapsed_time = updatedTime - past_time;
             long elapsed_time2 = 0;
-            Log.d("debug", String.format("経過時間 [%d] ms", elapsed_time));
+            Log.d("Ball", String.format("経過時間 [%d] ms", elapsed_time));
             // 前の画面更新時間が 0より大きかったら 有効
             if (past_time > 0) {
                 // 計算で経過時間を管理するためのインタフェースオブジェクトを生成
@@ -253,10 +259,13 @@ public class Ball {
                         // 経過時間データを更新
                         update_display_if.setElapsedTime2(update_display_if.getElapsedTime2() + hpi.getHitableMsec());
                         // ボールにデータをセット
-                        setLeft(hpi.getNewBallCenterX() - (int)radius);
-                        setTop(hpi.getNewBallCenterY() - (int)radius);
+                        setLeft(hpi.getNewBallCenterX() - radius);
+                        setTop(hpi.getNewBallCenterY() - radius);
                         setAngle(hpi.getNewAngle());
                         hit_flg = true;
+                        Log.d("Ball", String.format("Hit [%s]", (hpi.block != null) ? hpi.block.toString() : hpi.wall.toString()));
+                        Log.d("Ball", String.format("left [%s] top [%s] angle [%s]",
+                                Double.valueOf(left).toString(), Double.valueOf(top).toString(), Double.valueOf(angle).toString()));
                     }
                 } while (hit_flg);
 
@@ -268,10 +277,9 @@ public class Ball {
                     double radians = Math.toRadians(angle);
                     double x_distance = distance * Math.cos(radians);
                     double y_distance = distance * Math.sin(radians);
-                    left = left + (int)x_distance;
-                    top = top + (int)y_distance;
+                    left = left + x_distance;
+                    top = top + y_distance;
                 }
-                Log.d("Ball", String.format("BallLeft [%d] BallTop [%d]", left, top));
             }
 
             // 中心をセット
@@ -280,7 +288,12 @@ public class Ball {
             //描画処理(Lock中なのでなるべく早く)
             Paint paint = new Paint();
             paint.setColor(fillColor);
-            offscreen.drawCircle(center.getX(), center.getY(), radius, paint);
+            offscreen.drawCircle(Double.valueOf(center.getX()).floatValue(),
+                    Double.valueOf(center.getY()).floatValue(),
+                    Double.valueOf(radius).floatValue(), paint);
+            Log.d("Ball", String.format("final BallLeft [%s] BallTop [%s], BallAngle [%s]",
+                    Double.valueOf(left).toString(), Double.valueOf(top).toString(), Double.valueOf(angle).toString()));
+            Log.d("Ball", "out updateDisplay()");
         }
     }
 }
