@@ -19,9 +19,16 @@ public class WallBottom extends Wall {
      * @param ball
      * @return  衝突までの時間、 衝突しない場合は -1 を返す
      */
+    /**
+     *
+     * @param ball
+     * @param update_display_if
+     * @param arg_distance
+     * @return
+     */
     @Override
 //    public long calcNecessaryTimeToHit(Ball ball, UpdateDisplayIf update_display_if) {
-    public HitProcessInterface calcNecessaryTimeToHit(Ball ball, UpdateDisplayIf update_display_if) {
+    public HitProcessInterface calcNecessaryTimeToHit(Ball ball, UpdateDisplayIf update_display_if, Double arg_distance) {
         BallCenter ball_center = ball.getCenter();
         double ball_left = ball.getLeft();
         double ball_right = ball.getRight();
@@ -33,7 +40,14 @@ public class WallBottom extends Wall {
         double right = left + width;
 
         // ボールと壁との距離 縦方向
-        double distance_height = calcDistanceHeight(ball);
+        double distance_height;
+        if (arg_distance == null) {
+            // ここで計算する
+            distance_height = calcDistanceHeight(ball);
+        } else {
+            // 引数を使う
+            distance_height = arg_distance;
+        }
 
         if ((angle >= 90 && angle < 180) || (angle >= 0 && angle < 90)) {
             // ボール下点と上壁が同じ縦方向位置になるまでの時間
@@ -104,7 +118,9 @@ public class WallBottom extends Wall {
                     angle = 360 - Math.abs(((angle - (incidence_angle * 2)) % 360));
                 }
                 hpi.setNewAngle(angle);
-                Log.d("WallBottom", String.format("Angle [%e]", angle));
+                Log.d("WallBottom", String.format("Angle [%s]", Double.valueOf(angle).toString()));
+
+                return hpi;
             }
         }
         return null;
@@ -126,6 +142,8 @@ public class WallBottom extends Wall {
         double bottom = top + height;
         double right = left + width;
 
-        return top - ball_bottom;
+        double distance = top - ball_bottom;
+        Log.d("WallBottom", String.format("distance height [%s]", Double.valueOf(distance).toString()));
+        return distance;
     }
 }

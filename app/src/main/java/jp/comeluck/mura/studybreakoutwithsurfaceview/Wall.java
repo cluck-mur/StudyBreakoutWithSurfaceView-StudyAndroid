@@ -23,10 +23,22 @@ public abstract class Wall {
     /**
      * ボールが衝突するまでに必要な時間を計算する
      * @param ball
+     * @param update_display_if
+     * @param arg_distance
      * @return  衝突までの時間などのデータを詰めた HitProcessInterface オブジェクト
      *          衝突しない場合は null を返す
      */
-    abstract protected HitProcessInterface calcNecessaryTimeToHit(Ball ball, UpdateDisplayIf update_display_if);
+    abstract protected HitProcessInterface calcNecessaryTimeToHit(Ball ball, UpdateDisplayIf update_display_if, Double arg_distance);
+
+    /**
+     * ボールが衝突するまでに必要な時間を計算する (デフォルト引数用)
+     * @param ball
+     * @param update_display_if
+     * @return
+     */
+    protected HitProcessInterface calcNecessaryTimeToHit(Ball ball, UpdateDisplayIf update_display_if) {
+        return calcNecessaryTimeToHit(ball, update_display_if, null);
+    }
 
     /**
      * ボールがぶつかったか判定

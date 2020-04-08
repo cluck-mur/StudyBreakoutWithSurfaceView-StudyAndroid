@@ -18,10 +18,12 @@ public class WallRight extends Wall {
     /**
      * ボールが衝突するまでに必要な時間を計算する
      * @param ball
+     * @param update_display_if
+     * @param arg_distance
      * @return  衝突までの時間、 衝突しない場合は -1 を返す
      */
     @Override
-    public HitProcessInterface calcNecessaryTimeToHit(Ball ball, UpdateDisplayIf update_display_if) {
+    public HitProcessInterface calcNecessaryTimeToHit(Ball ball, UpdateDisplayIf update_display_if, Double arg_distance) {
         BallCenter ball_center = ball.getCenter();
         double ball_left = ball.getLeft();
         double ball_right = ball.getRight();
@@ -33,7 +35,14 @@ public class WallRight extends Wall {
         double right = left + width;
 
         // ボールとブロックとの距離 横方向
-        double distance_width = calcDistanceWidth(ball);
+        double distance_width;
+        if (arg_distance == null) {
+            // ここで計算する
+            distance_width = calcDistanceWidth(ball);
+        } else {
+            // 引数を使う
+            distance_width = arg_distance;
+        }
 
         if ((angle >= 0 && angle < 90) || (angle >= 270 && angle < 360)) {
             // ボール下点と上壁が同じ縦方向位置になるまでの時間
@@ -105,7 +114,7 @@ public class WallRight extends Wall {
                     angle = (angle - (incidence_angle * 2)) % 360;
                 }
                 hpi.setNewAngle(angle);
-                Log.d("WallBottom", String.format("Angle [%e]", angle));
+                Log.d("WallBottom", String.format("Angle [%s]", Double.valueOf(angle).toString()));
 
                 return hpi;
             }
@@ -130,6 +139,8 @@ public class WallRight extends Wall {
         double bottom = top + height;
         double right = left + width;
 
-        return left - ball_right;
+        double distance = left - ball_right;
+        Log.d("WallRight", String.format("distance height [%s]", Double.valueOf(distance).toString()));
+        return distance;
     }
 }
