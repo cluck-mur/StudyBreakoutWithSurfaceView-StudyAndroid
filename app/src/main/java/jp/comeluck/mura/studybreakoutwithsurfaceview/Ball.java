@@ -115,6 +115,11 @@ public class Ball {
      * @param left
      */
     public void setLeft(double left) {
+        if (left < 0) {
+            left = 0;
+        } else if (left + (radius * 2) > parentView.getWidth()) {
+            left = parentView.getWidth() - (radius * 2);
+        }
         this.left = left;
     }
 
@@ -135,10 +140,15 @@ public class Ball {
 
     /**
      * ボールの上位置をセット
-     * @param ball_top
+     * @param top
      */
-    public void setTop(double ball_top) {
-        top = ball_top;
+    public void setTop(double top) {
+        if (top < 0) {
+            top = 0;
+        } else if (top + (radius * 2) > parentView.getHeight()) {
+            top = parentView.getHeight() - (radius * 2);
+        }
+        this.top = top;
     }
 
     /**
@@ -182,7 +192,7 @@ public class Ball {
         if (loopCount == 1) {
             Log.d("Ball", String.format("screen size width [%d] height [%d]", offscreen.getWidth(), offscreen.getHeight()));
         }
-        if (loopCount > 50) {
+        if (loopCount > 25) {
             Log.d("Ball", "デバッグ用 ストッパー");
         }
 
@@ -224,17 +234,16 @@ public class Ball {
                     hit_flg = false;
                     HitProcessInterface hpi = null;
                     // ブロックとの衝突判定 ブロックの数だけループ
-                    for (Block block : blocks) {
-//                        HitProcessInterface tmp_necessary_time_to_hit = block.calcNecessaryTimeToHit(this, update_display_if);
-                        HitProcessInterface tmp_hpi = block.checkHit(this, update_display_if);
-                        if (tmp_hpi != null && tmp_hpi.getHitableMsec() < elapsed_time) {
-                            // 衝突までの時間が前に判定したブロックより小さいなら
-                            if (hpi == null || (hpi.getHitableMsec() > 0 && tmp_hpi.getHitableMsec() < hpi.getHitableMsec())) {
-                                // 候補として保持
-                                hpi = tmp_hpi;
-                            }
-                        }
-                    }
+//                    for (Block block : blocks) {
+//                        HitProcessInterface tmp_hpi = block.checkHit(this, update_display_if);
+//                        if (tmp_hpi != null && tmp_hpi.getHitableMsec() < elapsed_time) {
+//                            // 衝突までの時間が前に判定したブロックより小さいなら
+//                            if (hpi == null || (hpi.getHitableMsec() > 0 && tmp_hpi.getHitableMsec() < hpi.getHitableMsec())) {
+//                                // 候補として保持
+//                                hpi = tmp_hpi;
+//                            }
+//                        }
+//                    }
 
                     // 壁との衝突判定
                     for (Wall wall : walls) {
@@ -275,10 +284,21 @@ public class Ball {
                 if (!hit_flg || final_elapsed_time > 0) {
                     double distance = speed * final_elapsed_time;
                     double radians = Math.toRadians(angle);
-                    double x_distance = distance * Math.cos(radians);
-                    double y_distance = distance * Math.sin(radians);
-                    left = left + x_distance;
-                    top = top + y_distance;
+                    double x_distance = distance * Math.abs(Math.cos(radians));
+                    double y_distance = distance * Math.abs(Math.sin(radians));
+                    if (0 <= angle && angle < 90) {
+                        left = left + x_distance;
+                        top = top + y_distance;
+                    } else if (90 <= angle && angle < 180) {
+                        left = left - x_distance;
+                        top = top + y_distance;
+                    } else if (180 <= angle && angle < 270) {
+                        left = left - x_distance;
+                        top = top - y_distance;
+                    } else if (270 <= angle && angle < 360) {
+                        left = left + x_distance;
+                        top = top - y_distance;
+                    }
                 }
             }
 

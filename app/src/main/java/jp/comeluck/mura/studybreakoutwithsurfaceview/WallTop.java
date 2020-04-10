@@ -53,7 +53,12 @@ public class WallTop extends Wall {
             if (hitable_msec != -1 && hitable_msec <= update_display_if.getElapsedTime()) {
                 // ボール中心がhitable_msecの間に移動した後の横方向の位置
                 double move_x = (ball.getSpeed() * hitable_msec) * Math.abs(Math.cos(radians));
-                double tmp_ball_center_x = ball_center.x + move_x;
+                double tmp_ball_center_x;
+                if (angle < 270) {
+                    tmp_ball_center_x = ball_center.x - move_x;
+                } else {
+                    tmp_ball_center_x = ball_center.x + move_x;
+                }
                 if (tmp_ball_center_x >= left + ball.getRadius() && tmp_ball_center_x < (left + width - ball.getRadius())) {
                     // Y方向の移動距離
                     double move_y = (ball.getSpeed() * hitable_msec) * Math.abs(Math.sin(radians));
@@ -91,28 +96,49 @@ public class WallTop extends Wall {
 
         // ボールと壁との距離 縦方向
         double distance_height = calcDistanceHeight(ball);
-        // 縦方向の距離が正の値だったら
-        if (distance_height > 0) {
-            // ボールと衝突するまでの時間
-            HitProcessInterface hpi = calcNecessaryTimeToHit(ball, update_display_if);
-            // ボールと衝突する可能性がある場合
-            if (hpi != null) {
-                // バウンド角（反射角）とX位置を計算
-                Log.d("WallTop", String.format("上の壁"));
-                if (angle >= 270 && angle < 360) {
-                    // バウンド角を計算
-                    double incidence_angle = 360 - angle;
-                    angle = (angle + (incidence_angle * 2)) % 360;
-                } else if (angle >= 180 && angle < 270) {
-                    // バウンド角を計算
-                    double incidence_angle = angle - 180;
-                    angle = (angle - (incidence_angle * 2)) % 360;
-                }
-                hpi.setNewAngle(angle);
-                Log.d("WallBottom", String.format("Angle [%s]", Double.valueOf(angle).toString()));
+//        // 縦方向の距離が正の値だったら
+//        if (distance_height > 0) {
+//            // ボールと衝突するまでの時間
+//            HitProcessInterface hpi = calcNecessaryTimeToHit(ball, update_display_if, distance_height);
+//            // ボールと衝突する可能性がある場合
+//            if (hpi != null) {
+//                // バウンド角（反射角）とX位置を計算
+//                Log.d("WallTop", String.format("上の壁"));
+//                if (angle >= 270 && angle < 360) {
+//                    // バウンド角を計算
+//                    double incidence_angle = 360 - angle;
+//                    angle = (angle + (incidence_angle * 2)) % 360;
+//                } else if (angle >= 180 && angle < 270) {
+//                    // バウンド角を計算
+//                    double incidence_angle = angle - 180;
+//                    angle = (angle - (incidence_angle * 2)) % 360;
+//                }
+//                hpi.setNewAngle(angle);
+//                Log.d("WallBottom", String.format("Angle [%s]", Double.valueOf(angle).toString()));
+//
+//                return hpi;
+//            }
+//        }
 
-                return hpi;
+        // ボールと衝突するまでの時間
+        HitProcessInterface hpi = calcNecessaryTimeToHit(ball, update_display_if, distance_height);
+        // ボールと衝突する可能性がある場合
+        if (hpi != null) {
+            // バウンド角（反射角）とX位置を計算
+            Log.d("WallTop", String.format("上の壁"));
+            if (angle >= 270 && angle < 360) {
+                // バウンド角を計算
+                double incidence_angle = 360 - angle;
+                angle = (angle + (incidence_angle * 2)) % 360;
+            } else if (angle >= 180 && angle < 270) {
+                // バウンド角を計算
+                double incidence_angle = angle - 180;
+                angle = (angle - (incidence_angle * 2)) % 360;
             }
+            hpi.setNewAngle(angle);
+            Log.d("WallTop", String.format("Angle [%s]", Double.valueOf(angle).toString()));
+
+            return hpi;
         }
         return null;
     }
@@ -135,6 +161,9 @@ public class WallTop extends Wall {
 
         double distance = ball_top - bottom;
         Log.d("WallTop", String.format("distance height [%s]", Double.valueOf(distance).toString()));
+        if (distance <= 0) {
+            Log.d("WallTop", String.format("距離が0以下", Double.valueOf(distance).toString()));
+        }
         return distance;
     }
 }
