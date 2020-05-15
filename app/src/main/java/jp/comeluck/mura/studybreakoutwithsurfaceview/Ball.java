@@ -53,6 +53,9 @@ public class Ball {
         this.left = position_left;
         this.top = position_top;
         this.angle = angle;
+        if (angle == 0d || angle == 180d) {
+            Log.d("Ball", String.format("角度がおかしい"));
+        }
         this.speed = speed;
 
         this.radius = radius;
@@ -172,6 +175,9 @@ public class Ball {
      */
     public void setAngle(double angle) {
         this.angle = angle;
+        if (angle == 0d || angle == 180d) {
+            Log.d("Ball", String.format("角度がおかしい"));
+        }
     }
 
     /**
@@ -223,27 +229,20 @@ public class Ball {
                 // 経過時間内に衝突したブロックや壁がなくなるまでループ
                 do {
                     //++ ブロックや壁との衝突判定
-//                    // 衝突後の経過時間に設定しなおし
-//                    elapsed_time = update_display_if.getElapsedTime() - update_display_if.getElapsedTime2();
-//                    // 衝突までの時間を再度初期化
-//                    elapsed_time2 = 0;
-//                    // インターフェースに設定しなおし
-//                    update_display_if.setElapsedTime(elapsed_time);    // 経過時間
-//                    update_display_if.setElapsedTime2(elapsed_time2);
                     // 衝突フラグを設定しなおし
                     hit_flg = false;
                     HitProcessInterface hpi = null;
                     // ブロックとの衝突判定 ブロックの数だけループ
-//                    for (Block block : blocks) {
-//                        HitProcessInterface tmp_hpi = block.checkHit(this, update_display_if);
-//                        if (tmp_hpi != null && tmp_hpi.getHitableMsec() < elapsed_time) {
-//                            // 衝突までの時間が前に判定したブロックより小さいなら
-//                            if (hpi == null || (hpi.getHitableMsec() > 0 && tmp_hpi.getHitableMsec() < hpi.getHitableMsec())) {
-//                                // 候補として保持
-//                                hpi = tmp_hpi;
-//                            }
-//                        }
-//                    }
+                    for (Block block : blocks) {
+                        HitProcessInterface tmp_hpi = block.checkHit(this, update_display_if);
+                        if (tmp_hpi != null && tmp_hpi.getHitableMsec() < elapsed_time) {
+                            // 衝突までの時間が前に判定したブロックより小さいなら
+                            if (hpi == null || (hpi.getHitableMsec() > 0 && tmp_hpi.getHitableMsec() < hpi.getHitableMsec())) {
+                                // 候補として保持
+                                hpi = tmp_hpi;
+                            }
+                        }
+                    }
 
                     // 壁との衝突判定
                     for (Wall wall : walls) {
@@ -259,12 +258,6 @@ public class Ball {
 
                     // ブロックか壁に衝突したか？
                     if (hpi != null) {
-                        // ボールがブロックや壁に衝突した時の処理
-                        Block block = hpi.getBlock();
-                        Wall wall = hpi.getWall();
-                        if (block != null) {
-                            block.setIsDisplay(false);
-                        }
                         // 経過時間データを更新
                         update_display_if.setElapsedTime2(update_display_if.getElapsedTime2() + hpi.getHitableMsec());
                         // ボールにデータをセット
@@ -275,6 +268,13 @@ public class Ball {
                         Log.d("Ball", String.format("Hit [%s]", (hpi.block != null) ? hpi.block.toString() : hpi.wall.toString()));
                         Log.d("Ball", String.format("left [%s] top [%s] angle [%s]",
                                 Double.valueOf(left).toString(), Double.valueOf(top).toString(), Double.valueOf(angle).toString()));
+
+                        // ボールが衝突したブロックや壁に対する処理
+                        Block block = hpi.getBlock();
+                        Wall wall = hpi.getWall();
+                        if (block != null) {
+                            block.setIsDisplay(false);
+                        }
                     }
                 } while (hit_flg);
 

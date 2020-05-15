@@ -1,5 +1,7 @@
 package jp.comeluck.mura.studybreakoutwithsurfaceview;
 
+import android.util.Log;
+
 /**
  * ボールとブロックや壁が衝突した時のデータを受け渡すクラス
  */
@@ -151,6 +153,9 @@ public class HitProcessInterface {
      */
     public void setNewAngle(double newAngle) {
         this.newAngle = newAngle;
+        if (newAngle == 0d || newAngle == 180d) {
+            Log.d("Ball", String.format("角度がおかしい"));
+        }
     }
 
     /**
