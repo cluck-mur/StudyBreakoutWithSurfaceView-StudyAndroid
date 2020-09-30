@@ -148,7 +148,10 @@ public class CrossPoint {
     public static PVector[] getCrossPoints(double x1, double y1, double angle, double circleX, double circleY, double r) {
         double radians = Math.toRadians(angle);
         double x2 = 0;
-        double y2 = x2 * Math.tan(radians) + y1 - (x1 * Math.tan(angle));
+//        double y2 = x2 * Math.tan(radians) + y1 - (x1 * Math.tan(angle));
+        double tan = Math.round(Math.tan(radians) * 10000) / 10000;
+        double xtan = x1 * tan;
+        double y2 = y1 - xtan;
         return getCrossPoints(x2, y2, x1, y1, circleX, circleY, r);
     }
 
@@ -160,7 +163,7 @@ public class CrossPoint {
          * @param y2
          * @return
          */
-    private static double dist( double x1, double y1, double x2, double y2 )
+    public static double dist( double x1, double y1, double x2, double y2 )
     {
         double l;
         double dx, dy;

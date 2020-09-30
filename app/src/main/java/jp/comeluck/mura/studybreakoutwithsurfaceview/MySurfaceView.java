@@ -143,16 +143,16 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
             racket1.init( (int)(getHeight() * 0.005), (int)(ball1.getRadius() * 12), Color.GREEN);
             rackets.add(racket1);
 
-//            // Ball2 オブジェクトを生成
-//            Ball ball2 = new Ball(this);
-//            // Ball2を初期化
-//            ball2.init((int)(secondScreenBuffer.getWidth() * 0.75), (int)(secondScreenBuffer.getHeight() * 0.75), 125, 0.3, radius, Color.MAGENTA);
-//            // リストに保存
-//            balls.add(ball2);
-//            // ラケット2 オブジェクトを生成
-//            Racket racket2 = new Racket();
-//            racket2.init((int)(getHeight() * 0.005), (int)(ball2.getRadius() * 12), Color.MAGENTA);
-//            rackets.add(racket2);
+            // Ball2 オブジェクトを生成
+            Ball ball2 = new Ball(this);
+            // Ball2を初期化
+            ball2.init((int)(secondScreenBuffer.getWidth() * 0.75), (int)(secondScreenBuffer.getHeight() * 0.75), 125, 0.3, radius, Color.MAGENTA);
+            // リストに保存
+            balls.add(ball2);
+            // ラケット2 オブジェクトを生成
+            Racket racket2 = new Racket();
+            racket2.init((int)(getHeight() * 0.005), (int)(ball2.getRadius() * 12), Color.MAGENTA);
+            rackets.add(racket2);
 
             // ブロックのコンフィグ値を設定
             blockTop = (int)(secondScreenBuffer.getHeight() * 0.15);

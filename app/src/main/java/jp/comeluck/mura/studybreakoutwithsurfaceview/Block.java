@@ -5,6 +5,8 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.Log;
 
+import java.util.ArrayList;
+
 /**
  * ブロック クラス
  */
@@ -154,46 +156,60 @@ public class Block {
             // *** ブロック左上頂点との衝突
             {
                 // ブロック左上頂点とボールの交点を取得
-                PVector[] vectors = CrossPoint.getCrossPoints(left, top, angle, ball_center.x, ball_center.y, ball.radius);
+                double bx = left;
+                double by = top;
+                PVector[] vectors = CrossPoint.getCrossPoints(bx, by, angle, ball_center.x, ball_center.y, ball.radius);
                 if (vectors != null) {
                     if (vectors.length > 0) {
+                        ArrayList<Double> distances = new ArrayList<Double>();
+                        int index = 0;
                         for (int i = 0; i < vectors.length; i++) {
-                            PVector hit_xy = vectors[i];
-                            double tmp_x = hit_xy.getX();
-                            double tmp_y = hit_xy.getY();
-                            // ボールの中心角0度から90度の間の円周にヒットする場合有効
-                            if ((tmp_x > ball_center.x && tmp_x < ball_right) && (tmp_y > ball_center.y && tmp_y < ball_bottom)) {
-                                // ボールとブロックとの距離 横方向 ブロック左とボール交点
-                                double distance_width = left - tmp_x;
-                                // 横方向の距離が正の値だったら
-                                if (distance_width >= 0) {
-                                    // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
-                                    double radians = Math.toRadians(angle);
-                                    long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
-                                    // ここまでの経過時間内に衝突の可能性あるか
-                                    if (hitable_msec <= update_display_if.getElapsedTime()) {
-                                        // ボール中心がhitable_msecの間に移動した後の縦方向の位置
-                                        double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
-                                        // ボール中心がhitable_msecの間に移動した後の横方向の位置
-                                        double tmp_ball_center_x = ball_center.getX() + distance_width;
-                                        // 衝突側面の場合分けに使う基準値 *
-                                        double x45 = ball_center.x + ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        double y45 = ball_center.y + ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        HitProcessInterface hpi = new HitProcessInterface();
-                                        if (tmp_x < x45) {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.TOP);
-                                        } else {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.LEFT);
-                                        }
+                            double distance = CrossPoint.dist(bx, by, vectors[i].getX(), vectors[i].getY());
+                            distances.add(new Double(distance));
+                            if (i < 1) {
+                                index = 0;
+                            } else {
+                                if (distances.get(i) < distances.get(index)) {
+                                    index = i;
+                                }
+                            }
+                        }
 
-                                        if (ret_hpi == null) {
+                        PVector hit_xy = vectors[index];
+                        double tmp_x = hit_xy.getX();
+                        double tmp_y = hit_xy.getY();
+                        // ボールの中心角0度から90度の間の円周にヒットする場合有効
+                        if ((tmp_x > ball_center.x && tmp_x < ball_right) && (tmp_y > ball_center.y && tmp_y < ball_bottom)) {
+                            // ボールとブロックとの距離 横方向 ブロック左とボール交点
+                            double distance_width = left - tmp_x;
+                            // 横方向の距離が正の値だったら
+                            if (distance_width >= 0) {
+                                // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
+                                double radians = Math.toRadians(angle);
+                                long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
+                                // ここまでの経過時間内に衝突の可能性あるか
+                                if (hitable_msec <= update_display_if.getElapsedTime()) {
+                                    // ボール中心がhitable_msecの間に移動した後の縦方向の位置
+                                    double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
+                                    // ボール中心がhitable_msecの間に移動した後の横方向の位置
+                                    double tmp_ball_center_x = ball_center.getX() + distance_width;
+                                    // 衝突側面の場合分けに使う基準値 *
+                                    double x45 = ball_center.x + ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    double y45 = ball_center.y + ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    HitProcessInterface hpi = new HitProcessInterface();
+                                    if (tmp_x < x45) {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.TOP);
+                                    } else {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.LEFT);
+                                    }
+
+                                    if (ret_hpi == null) {
+                                        ret_hpi = hpi;
+                                    } else {
+                                        if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
                                             ret_hpi = hpi;
-                                        } else {
-                                            if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
-                                                ret_hpi = hpi;
-                                            }
                                         }
                                     }
                                 }
@@ -205,46 +221,60 @@ public class Block {
             // *** ブロック左下頂点との衝突
             {
                 // ブロック左下頂点とボールの交点を取得
-                PVector[] vectors = CrossPoint.getCrossPoints(left, bottom, angle, ball_center.x, ball_center.y, ball.radius);
+                double bx = left;
+                double by = bottom;
+                PVector[] vectors = CrossPoint.getCrossPoints(bx, by, angle, ball_center.x, ball_center.y, ball.radius);
                 if (vectors != null) {
                     if (vectors.length > 0) {
+                        ArrayList<Double> distances = new ArrayList<Double>();
+                        int index = 0;
                         for (int i = 0; i < vectors.length; i++) {
-                            PVector hit_xy = vectors[i];
-                            double tmp_x = hit_xy.getX();
-                            double tmp_y = hit_xy.getY();
-                            // ボールの中心角270度から360度の間の円周にヒットする場合有効
-                            if ((tmp_x > ball_center.x && tmp_x < ball_right) && (tmp_y > ball_top && tmp_y < ball_center.y)) {
-                                // ボールとブロックとの距離 横方向 ブロック左とボール交点
-                                double distance_width = left - tmp_x;
-                                // 横方向の距離が正の値だったら
-                                if (distance_width >= 0) {
-                                    // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
-                                    double radians = Math.toRadians(angle);
-                                    long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
-                                    // ここまでの経過時間内に衝突の可能性あるか
-                                    if (hitable_msec <= update_display_if.getElapsedTime()) {
-                                        // ボール中心がhitable_msecの間に移動した後の縦方向の位置
-                                        double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
-                                        // ボール中心がhitable_msecの間に移動した後の横方向の位置
-                                        double tmp_ball_center_x = ball_center.getX() + distance_width;
-                                        // 衝突側面の場合分けに使う基準値 *
-                                        double x45 = ball_center.x + ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        double y45 = ball_center.y - ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        HitProcessInterface hpi = new HitProcessInterface();
-                                        if (tmp_x < x45) {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.BOTTOM);
-                                        } else {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.LEFT);
-                                        }
+                            double distance = CrossPoint.dist(bx, by, vectors[i].getX(), vectors[i].getY());
+                            distances.add(new Double(distance));
+                            if (i < 1) {
+                                index = 0;
+                            } else {
+                                if (distances.get(i) < distances.get(index)) {
+                                    index = i;
+                                }
+                            }
+                        }
 
-                                        if (ret_hpi == null) {
+                        PVector hit_xy = vectors[index];
+                        double tmp_x = hit_xy.getX();
+                        double tmp_y = hit_xy.getY();
+                        // ボールの中心角270度から360度の間の円周にヒットする場合有効
+                        if ((tmp_x > ball_center.x && tmp_x < ball_right) && (tmp_y > ball_top && tmp_y < ball_center.y)) {
+                            // ボールとブロックとの距離 横方向 ブロック左とボール交点
+                            double distance_width = left - tmp_x;
+                            // 横方向の距離が正の値だったら
+                            if (distance_width >= 0) {
+                                // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
+                                double radians = Math.toRadians(angle);
+                                long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
+                                // ここまでの経過時間内に衝突の可能性あるか
+                                if (hitable_msec <= update_display_if.getElapsedTime()) {
+                                    // ボール中心がhitable_msecの間に移動した後の縦方向の位置
+                                    double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
+                                    // ボール中心がhitable_msecの間に移動した後の横方向の位置
+                                    double tmp_ball_center_x = ball_center.getX() + distance_width;
+                                    // 衝突側面の場合分けに使う基準値 *
+                                    double x45 = ball_center.x + ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    double y45 = ball_center.y - ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    HitProcessInterface hpi = new HitProcessInterface();
+                                    if (tmp_x < x45) {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.BOTTOM);
+                                    } else {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.LEFT);
+                                    }
+
+                                    if (ret_hpi == null) {
+                                        ret_hpi = hpi;
+                                    } else {
+                                        if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
                                             ret_hpi = hpi;
-                                        } else {
-                                            if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
-                                                ret_hpi = hpi;
-                                            }
                                         }
                                     }
                                 }
@@ -256,46 +286,60 @@ public class Block {
             // *** ブロック右上頂点との衝突
             {
                 // ブロック右上頂点とボールの交点を取得
-                PVector[] vectors = CrossPoint.getCrossPoints(right, top, angle, ball_center.x, ball_center.y, ball.radius);
+                double bx = right;
+                double by = top;
+                PVector[] vectors = CrossPoint.getCrossPoints(bx, by, angle, ball_center.x, ball_center.y, ball.radius);
                 if (vectors != null) {
                     if (vectors.length > 0) {
+                        ArrayList<Double> distances = new ArrayList<Double>();
+                        int index = 0;
                         for (int i = 0; i < vectors.length; i++) {
-                            PVector hit_xy = vectors[i];
-                            double tmp_x = hit_xy.getX();
-                            double tmp_y = hit_xy.getY();
-                            // ボールの中心角90度から180度の間の円周にヒットする場合有効
-                            if ((tmp_x > ball_left && tmp_x < ball_center.x) && (tmp_y > ball_center.y && tmp_y < ball_bottom)) {
-                                // ボールとブロックとの距離 横方向 ブロック右とボール交点
-                                double distance_width = right - tmp_x;
-                                // 横方向の距離が正の値だったら
-                                if (distance_width >= 0) {
-                                    // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
-                                    double radians = Math.toRadians(angle);
-                                    long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
-                                    // ここまでの経過時間内に衝突の可能性あるか
-                                    if (hitable_msec <= update_display_if.getElapsedTime()) {
-                                        // ボール中心がhitable_msecの間に移動した後の縦方向の位置
-                                        double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
-                                        // ボール中心がhitable_msecの間に移動した後の横方向の位置
-                                        double tmp_ball_center_x = ball_center.getX() + distance_width;
-                                        // 衝突側面の場合分けに使う基準値 *
-                                        double x45 = ball_center.x - ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        double y45 = ball_center.y + ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        HitProcessInterface hpi = new HitProcessInterface();
-                                        if (tmp_x < x45) {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.RIGHT);
-                                        } else {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.TOP);
-                                        }
+                            double distance = CrossPoint.dist(bx, by, vectors[i].getX(), vectors[i].getY());
+                            distances.add(new Double(distance));
+                            if (i < 1) {
+                                index = 0;
+                            } else {
+                                if (distances.get(i) < distances.get(index)) {
+                                    index = i;
+                                }
+                            }
+                        }
 
-                                        if (ret_hpi == null) {
+                        PVector hit_xy = vectors[index];
+                        double tmp_x = hit_xy.getX();
+                        double tmp_y = hit_xy.getY();
+                        // ボールの中心角90度から180度の間の円周にヒットする場合有効
+                        if ((tmp_x > ball_left && tmp_x < ball_center.x) && (tmp_y > ball_center.y && tmp_y < ball_bottom)) {
+                            // ボールとブロックとの距離 横方向 ブロック右とボール交点
+                            double distance_width = right - tmp_x;
+                            // 横方向の距離が正の値だったら
+                            if (distance_width >= 0) {
+                                // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
+                                double radians = Math.toRadians(angle);
+                                long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
+                                // ここまでの経過時間内に衝突の可能性あるか
+                                if (hitable_msec <= update_display_if.getElapsedTime()) {
+                                    // ボール中心がhitable_msecの間に移動した後の縦方向の位置
+                                    double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
+                                    // ボール中心がhitable_msecの間に移動した後の横方向の位置
+                                    double tmp_ball_center_x = ball_center.getX() + distance_width;
+                                    // 衝突側面の場合分けに使う基準値 *
+                                    double x45 = ball_center.x - ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    double y45 = ball_center.y + ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    HitProcessInterface hpi = new HitProcessInterface();
+                                    if (tmp_x < x45) {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.RIGHT);
+                                    } else {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.TOP);
+                                    }
+
+                                    if (ret_hpi == null) {
+                                        ret_hpi = hpi;
+                                    } else {
+                                        if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
                                             ret_hpi = hpi;
-                                        } else {
-                                            if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
-                                                ret_hpi = hpi;
-                                            }
                                         }
                                     }
                                 }
@@ -370,46 +414,60 @@ public class Block {
             // *** ブロック右上頂点との衝突
             {
                 // ブロック右上頂点とボールの交点を取得 *
-                PVector[] vectors = CrossPoint.getCrossPoints(right, top, angle, ball_center.x, ball_center.y, ball.radius);
+                double bx = right;
+                double by = top;
+                PVector[] vectors = CrossPoint.getCrossPoints(bx, by, angle, ball_center.x, ball_center.y, ball.radius);
                 if (vectors != null) {
                     if (vectors.length > 0) {
+                        ArrayList<Double> distances = new ArrayList<Double>();
+                        int index = 0;
                         for (int i = 0; i < vectors.length; i++) {
-                            PVector hit_xy = vectors[i];
-                            double tmp_x = hit_xy.getX();
-                            double tmp_y = hit_xy.getY();
-                            // ボールの中心角90度から180度の間の円周にヒットする場合有効 *
-                            if ((tmp_x > ball_left && tmp_x < ball_center.x) && (tmp_y > ball_center.y && tmp_y < ball_bottom)) {
-                                // ボールとブロックとの距離 横方向 ブロック右とボール交点 *
-                                double distance_width = tmp_x - right;
-                                // 横方向の距離が正の値だったら
-                                if (distance_width >= 0) {
-                                    // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
-                                    double radians = Math.toRadians(angle);
-                                    long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
-                                    // ここまでの経過時間内に衝突の可能性あるか
-                                    if (hitable_msec <= update_display_if.getElapsedTime()) {
-                                        // ボール中心がhitable_msecの間に移動した後の縦方向の位置
-                                        double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
-                                        // ボール中心がhitable_msecの間に移動した後の横方向の位置
-                                        double tmp_ball_center_x = ball_center.getX() + distance_width;
-                                        // 衝突側面の場合分けに使う基準値 *
-                                        double x45 = ball_center.x - ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        double y45 = ball_center.y + ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        HitProcessInterface hpi = new HitProcessInterface();
-                                        if (tmp_x < x45) {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.RIGHT);
-                                        } else {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.TOP);
-                                        }
+                            double distance = CrossPoint.dist(bx, by, vectors[i].getX(), vectors[i].getY());
+                            distances.add(new Double(distance));
+                            if (i < 1) {
+                                index = 0;
+                            } else {
+                                if (distances.get(i) < distances.get(index)) {
+                                    index = i;
+                                }
+                            }
+                        }
 
-                                        if (ret_hpi == null) {
+                        PVector hit_xy = vectors[index];
+                        double tmp_x = hit_xy.getX();
+                        double tmp_y = hit_xy.getY();
+                        // ボールの中心角90度から180度の間の円周にヒットする場合有効 *
+                        if ((tmp_x > ball_left && tmp_x < ball_center.x) && (tmp_y > ball_center.y && tmp_y < ball_bottom)) {
+                            // ボールとブロックとの距離 横方向 ブロック右とボール交点 *
+                            double distance_width = tmp_x - right;
+                            // 横方向の距離が正の値だったら
+                            if (distance_width >= 0) {
+                                // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
+                                double radians = Math.toRadians(angle);
+                                long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
+                                // ここまでの経過時間内に衝突の可能性あるか
+                                if (hitable_msec <= update_display_if.getElapsedTime()) {
+                                    // ボール中心がhitable_msecの間に移動した後の縦方向の位置
+                                    double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
+                                    // ボール中心がhitable_msecの間に移動した後の横方向の位置
+                                    double tmp_ball_center_x = ball_center.getX() + distance_width;
+                                    // 衝突側面の場合分けに使う基準値 *
+                                    double x45 = ball_center.x - ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    double y45 = ball_center.y + ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    HitProcessInterface hpi = new HitProcessInterface();
+                                    if (tmp_x < x45) {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.RIGHT);
+                                    } else {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.TOP);
+                                    }
+
+                                    if (ret_hpi == null) {
+                                        ret_hpi = hpi;
+                                    } else {
+                                        if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
                                             ret_hpi = hpi;
-                                        } else {
-                                            if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
-                                                ret_hpi = hpi;
-                                            }
                                         }
                                     }
                                 }
@@ -421,46 +479,60 @@ public class Block {
             // *** ブロック右下頂点との衝突
             {
                 // ブロック右下頂点とボールの交点を取得 *
-                PVector[] vectors = CrossPoint.getCrossPoints(right, bottom, angle, ball_center.x, ball_center.y, ball.radius);
+                double bx = right;
+                double by = bottom;
+                PVector[] vectors = CrossPoint.getCrossPoints(bx, by, angle, ball_center.x, ball_center.y, ball.radius);
                 if (vectors != null) {
                     if (vectors.length > 0) {
+                        ArrayList<Double> distances = new ArrayList<Double>();
+                        int index = 0;
                         for (int i = 0; i < vectors.length; i++) {
-                            PVector hit_xy = vectors[i];
-                            double tmp_x = hit_xy.getX();
-                            double tmp_y = hit_xy.getY();
-                            // ボールの中心角180度から270度の間の円周にヒットする場合有効 *
-                            if ((tmp_x > ball_left && tmp_x < ball_center.x) && (tmp_y > ball_top && tmp_y < ball_center.y)) {
-                                // ボールとブロックとの距離 横方向 ブロック右とボール交点 *
-                                double distance_width = tmp_x - right;
-                                // 横方向の距離が正の値だったら
-                                if (distance_width >= 0) {
-                                    // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
-                                    double radians = Math.toRadians(angle);
-                                    long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
-                                    // ここまでの経過時間内に衝突の可能性あるか
-                                    if (hitable_msec <= update_display_if.getElapsedTime()) {
-                                        // ボール中心がhitable_msecの間に移動した後の縦方向の位置
-                                        double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
-                                        // ボール中心がhitable_msecの間に移動した後の横方向の位置
-                                        double tmp_ball_center_x = ball_center.getX() + distance_width;
-                                        // 衝突側面の場合分けに使う基準値 *
-                                        double x45 = ball_center.x - ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        double y45 = ball_center.y - ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        HitProcessInterface hpi = new HitProcessInterface();
-                                        if (tmp_x < x45) {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.RIGHT);
-                                        } else {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.BOTTOM);
-                                        }
+                            double distance = CrossPoint.dist(bx, by, vectors[i].getX(), vectors[i].getY());
+                            distances.add(new Double(distance));
+                            if (i < 1) {
+                                index = 0;
+                            } else {
+                                if (distances.get(i) < distances.get(index)) {
+                                    index = i;
+                                }
+                            }
+                        }
 
-                                        if (ret_hpi == null) {
+                        PVector hit_xy = vectors[index];
+                        double tmp_x = hit_xy.getX();
+                        double tmp_y = hit_xy.getY();
+                        // ボールの中心角180度から270度の間の円周にヒットする場合有効 *
+                        if ((tmp_x > ball_left && tmp_x < ball_center.x) && (tmp_y > ball_top && tmp_y < ball_center.y)) {
+                            // ボールとブロックとの距離 横方向 ブロック右とボール交点 *
+                            double distance_width = tmp_x - right;
+                            // 横方向の距離が正の値だったら
+                            if (distance_width >= 0) {
+                                // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
+                                double radians = Math.toRadians(angle);
+                                long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
+                                // ここまでの経過時間内に衝突の可能性あるか
+                                if (hitable_msec <= update_display_if.getElapsedTime()) {
+                                    // ボール中心がhitable_msecの間に移動した後の縦方向の位置
+                                    double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
+                                    // ボール中心がhitable_msecの間に移動した後の横方向の位置
+                                    double tmp_ball_center_x = ball_center.getX() + distance_width;
+                                    // 衝突側面の場合分けに使う基準値 *
+                                    double x45 = ball_center.x - ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    double y45 = ball_center.y - ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    HitProcessInterface hpi = new HitProcessInterface();
+                                    if (tmp_x < x45) {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.RIGHT);
+                                    } else {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.BOTTOM);
+                                    }
+
+                                    if (ret_hpi == null) {
+                                        ret_hpi = hpi;
+                                    } else {
+                                        if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
                                             ret_hpi = hpi;
-                                        } else {
-                                            if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
-                                                ret_hpi = hpi;
-                                            }
                                         }
                                     }
                                 }
@@ -472,46 +544,60 @@ public class Block {
             // *** ブロック左上頂点との衝突
             {
                 // ブロック左上頂点とボールの交点を取得 *
-                PVector[] vectors = CrossPoint.getCrossPoints(left, top, angle, ball_center.x, ball_center.y, ball.radius);
+                double bx = left;
+                double by = top;
+                PVector[] vectors = CrossPoint.getCrossPoints(bx, by, angle, ball_center.x, ball_center.y, ball.radius);
                 if (vectors != null) {
                     if (vectors.length > 0) {
+                        ArrayList<Double> distances = new ArrayList<Double>();
+                        int index = 0;
                         for (int i = 0; i < vectors.length; i++) {
-                            PVector hit_xy = vectors[i];
-                            double tmp_x = hit_xy.getX();
-                            double tmp_y = hit_xy.getY();
-                            // ボールの中心角0度から90度の間の円周にヒットする場合有効 *
-                            if ((tmp_x > ball_center.x && tmp_x < ball_right) && (tmp_y > ball_center.y && tmp_y < ball_bottom)) {
-                                // ボールとブロックとの距離 横方向 ブロック左とボール交点 *
-                                double distance_width = tmp_x - left;
-                                // 横方向の距離が正の値だったら
-                                if (distance_width >= 0) {
-                                    // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
-                                    double radians = Math.toRadians(angle);
-                                    long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
-                                    // ここまでの経過時間内に衝突の可能性あるか
-                                    if (hitable_msec <= update_display_if.getElapsedTime()) {
-                                        // ボール中心がhitable_msecの間に移動した後の縦方向の位置
-                                        double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
-                                        // ボール中心がhitable_msecの間に移動した後の横方向の位置
-                                        double tmp_ball_center_x = ball_center.getX() + distance_width;
-                                        // 衝突側面の場合分けに使う基準値 *
-                                        double x45 = ball_center.x + ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        double y45 = ball_center.y + ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        HitProcessInterface hpi = new HitProcessInterface();
-                                        if (tmp_x < x45) {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.TOP);
-                                        } else {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.LEFT);
-                                        }
+                            double distance = CrossPoint.dist(bx, by, vectors[i].getX(), vectors[i].getY());
+                            distances.add(new Double(distance));
+                            if (i < 1) {
+                                index = 0;
+                            } else {
+                                if (distances.get(i) < distances.get(index)) {
+                                    index = i;
+                                }
+                            }
+                        }
 
-                                        if (ret_hpi == null) {
+                        PVector hit_xy = vectors[index];
+                        double tmp_x = hit_xy.getX();
+                        double tmp_y = hit_xy.getY();
+                        // ボールの中心角0度から90度の間の円周にヒットする場合有効 *
+                        if ((tmp_x > ball_center.x && tmp_x < ball_right) && (tmp_y > ball_center.y && tmp_y < ball_bottom)) {
+                            // ボールとブロックとの距離 横方向 ブロック左とボール交点 *
+                            double distance_width = tmp_x - left;
+                            // 横方向の距離が正の値だったら
+                            if (distance_width >= 0) {
+                                // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
+                                double radians = Math.toRadians(angle);
+                                long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
+                                // ここまでの経過時間内に衝突の可能性あるか
+                                if (hitable_msec <= update_display_if.getElapsedTime()) {
+                                    // ボール中心がhitable_msecの間に移動した後の縦方向の位置
+                                    double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
+                                    // ボール中心がhitable_msecの間に移動した後の横方向の位置
+                                    double tmp_ball_center_x = ball_center.getX() + distance_width;
+                                    // 衝突側面の場合分けに使う基準値 *
+                                    double x45 = ball_center.x + ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    double y45 = ball_center.y + ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    HitProcessInterface hpi = new HitProcessInterface();
+                                    if (tmp_x < x45) {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.TOP);
+                                    } else {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.LEFT);
+                                    }
+
+                                    if (ret_hpi == null) {
+                                        ret_hpi = hpi;
+                                    } else {
+                                        if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
                                             ret_hpi = hpi;
-                                        } else {
-                                            if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
-                                                ret_hpi = hpi;
-                                            }
                                         }
                                     }
                                 }
@@ -586,46 +672,60 @@ public class Block {
             // *** ブロック右下頂点との衝突
             {
                 // ブロック右下頂点とボールの交点を取得 *
-                PVector[] vectors = CrossPoint.getCrossPoints(right, bottom, angle, ball_center.x, ball_center.y, ball.radius);
+                double bx = right;
+                double by = bottom;
+                PVector[] vectors = CrossPoint.getCrossPoints(bx, by, angle, ball_center.x, ball_center.y, ball.radius);
                 if (vectors != null) {
                     if (vectors.length > 0) {
+                        ArrayList<Double> distances = new ArrayList<Double>();
+                        int index = 0;
                         for (int i = 0; i < vectors.length; i++) {
-                            PVector hit_xy = vectors[i];
-                            double tmp_x = hit_xy.getX();
-                            double tmp_y = hit_xy.getY();
-                            // ボールの中心角180度から270度の間の円周にヒットする場合有効 *
-                            if ((tmp_x > ball_left && tmp_x < ball_center.x) && (tmp_y > ball_top && tmp_y < ball_center.y)) {
-                                // ボールとブロックとの距離 横方向 ブロック右とボール交点 *
-                                double distance_width = tmp_x - right;
-                                // 横方向の距離が正の値だったら
-                                if (distance_width >= 0) {
-                                    // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
-                                    double radians = Math.toRadians(angle);
-                                    long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
-                                    // ここまでの経過時間内に衝突の可能性あるか
-                                    if (hitable_msec <= update_display_if.getElapsedTime()) {
-                                        // ボール中心がhitable_msecの間に移動した後の縦方向の位置
-                                        double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
-                                        // ボール中心がhitable_msecの間に移動した後の横方向の位置
-                                        double tmp_ball_center_x = ball_center.getX() + distance_width;
-                                        // 衝突側面の場合分けに使う基準値 *
-                                        double x45 = ball_center.x - ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        double y45 = ball_center.y - ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        HitProcessInterface hpi = new HitProcessInterface();
-                                        if (tmp_x < x45) {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.RIGHT);
-                                        } else {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.BOTTOM);
-                                        }
+                            double distance = CrossPoint.dist(bx, by, vectors[i].getX(), vectors[i].getY());
+                            distances.add(new Double(distance));
+                            if (i < 1) {
+                                index = 0;
+                            } else {
+                                if (distances.get(i) < distances.get(index)) {
+                                    index = i;
+                                }
+                            }
+                        }
 
-                                        if (ret_hpi == null) {
+                        PVector hit_xy = vectors[index];
+                        double tmp_x = hit_xy.getX();
+                        double tmp_y = hit_xy.getY();
+                        // ボールの中心角180度から270度の間の円周にヒットする場合有効 *
+                        if ((tmp_x > ball_left && tmp_x < ball_center.x) && (tmp_y > ball_top && tmp_y < ball_center.y)) {
+                            // ボールとブロックとの距離 横方向 ブロック右とボール交点 *
+                            double distance_width = tmp_x - right;
+                            // 横方向の距離が正の値だったら
+                            if (distance_width >= 0) {
+                                // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
+                                double radians = Math.toRadians(angle);
+                                long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
+                                // ここまでの経過時間内に衝突の可能性あるか
+                                if (hitable_msec <= update_display_if.getElapsedTime()) {
+                                    // ボール中心がhitable_msecの間に移動した後の縦方向の位置
+                                    double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
+                                    // ボール中心がhitable_msecの間に移動した後の横方向の位置
+                                    double tmp_ball_center_x = ball_center.getX() + distance_width;
+                                    // 衝突側面の場合分けに使う基準値 *
+                                    double x45 = ball_center.x - ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    double y45 = ball_center.y - ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    HitProcessInterface hpi = new HitProcessInterface();
+                                    if (tmp_x < x45) {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.RIGHT);
+                                    } else {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.BOTTOM);
+                                    }
+
+                                    if (ret_hpi == null) {
+                                        ret_hpi = hpi;
+                                    } else {
+                                        if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
                                             ret_hpi = hpi;
-                                        } else {
-                                            if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
-                                                ret_hpi = hpi;
-                                            }
                                         }
                                     }
                                 }
@@ -637,46 +737,60 @@ public class Block {
             // *** ブロック右上頂点との衝突
             {
                 // ブロック右上頂点とボールの交点を取得 *
-                PVector[] vectors = CrossPoint.getCrossPoints(right, top, angle, ball_center.x, ball_center.y, ball.radius);
+                double bx = right;
+                double by = top;
+                PVector[] vectors = CrossPoint.getCrossPoints(bx, by, angle, ball_center.x, ball_center.y, ball.radius);
                 if (vectors != null) {
                     if (vectors.length > 0) {
+                        ArrayList<Double> distances = new ArrayList<Double>();
+                        int index = 0;
                         for (int i = 0; i < vectors.length; i++) {
-                            PVector hit_xy = vectors[i];
-                            double tmp_x = hit_xy.getX();
-                            double tmp_y = hit_xy.getY();
-                            // ボールの中心角90度から180度の間の円周にヒットする場合有効 *
-                            if ((tmp_x > ball_left && tmp_x < ball_center.x) && (tmp_y > ball_center.y && tmp_y < ball_bottom)) {
-                                // ボールとブロックとの距離 横方向 ブロック右とボール交点 *
-                                double distance_width = tmp_x - right;
-                                // 横方向の距離が正の値だったら
-                                if (distance_width >= 0) {
-                                    // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
-                                    double radians = Math.toRadians(angle);
-                                    long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
-                                    // ここまでの経過時間内に衝突の可能性あるか
-                                    if (hitable_msec <= update_display_if.getElapsedTime()) {
-                                        // ボール中心がhitable_msecの間に移動した後の縦方向の位置
-                                        double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
-                                        // ボール中心がhitable_msecの間に移動した後の横方向の位置
-                                        double tmp_ball_center_x = ball_center.getX() + distance_width;
-                                        // 衝突側面の場合分けに使う基準値 *
-                                        double x45 = ball_center.x - ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        double y45 = ball_center.y + ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        HitProcessInterface hpi = new HitProcessInterface();
-                                        if (tmp_x < x45) {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.RIGHT);
-                                        } else {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.TOP);
-                                        }
+                            double distance = CrossPoint.dist(bx, by, vectors[i].getX(), vectors[i].getY());
+                            distances.add(new Double(distance));
+                            if (i < 1) {
+                                index = 0;
+                            } else {
+                                if (distances.get(i) < distances.get(index)) {
+                                    index = i;
+                                }
+                            }
+                        }
 
-                                        if (ret_hpi == null) {
+                        PVector hit_xy = vectors[index];
+                        double tmp_x = hit_xy.getX();
+                        double tmp_y = hit_xy.getY();
+                        // ボールの中心角90度から180度の間の円周にヒットする場合有効 *
+                        if ((tmp_x > ball_left && tmp_x < ball_center.x) && (tmp_y > ball_center.y && tmp_y < ball_bottom)) {
+                            // ボールとブロックとの距離 横方向 ブロック右とボール交点 *
+                            double distance_width = tmp_x - right;
+                            // 横方向の距離が正の値だったら
+                            if (distance_width >= 0) {
+                                // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
+                                double radians = Math.toRadians(angle);
+                                long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
+                                // ここまでの経過時間内に衝突の可能性あるか
+                                if (hitable_msec <= update_display_if.getElapsedTime()) {
+                                    // ボール中心がhitable_msecの間に移動した後の縦方向の位置
+                                    double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
+                                    // ボール中心がhitable_msecの間に移動した後の横方向の位置
+                                    double tmp_ball_center_x = ball_center.getX() + distance_width;
+                                    // 衝突側面の場合分けに使う基準値 *
+                                    double x45 = ball_center.x - ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    double y45 = ball_center.y + ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    HitProcessInterface hpi = new HitProcessInterface();
+                                    if (tmp_x < x45) {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.RIGHT);
+                                    } else {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.TOP);
+                                    }
+
+                                    if (ret_hpi == null) {
+                                        ret_hpi = hpi;
+                                    } else {
+                                        if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
                                             ret_hpi = hpi;
-                                        } else {
-                                            if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
-                                                ret_hpi = hpi;
-                                            }
                                         }
                                     }
                                 }
@@ -688,46 +802,60 @@ public class Block {
             // *** ブロック左下頂点との衝突
             {
                 // ブロック左下頂点とボールの交点を取得 *
-                PVector[] vectors = CrossPoint.getCrossPoints(left, bottom, angle, ball_center.x, ball_center.y, ball.radius);
+                double bx = left;
+                double by = bottom;
+                PVector[] vectors = CrossPoint.getCrossPoints(bx, by, angle, ball_center.x, ball_center.y, ball.radius);
                 if (vectors != null) {
                     if (vectors.length > 0) {
+                        ArrayList<Double> distances = new ArrayList<Double>();
+                        int index = 0;
                         for (int i = 0; i < vectors.length; i++) {
-                            PVector hit_xy = vectors[i];
-                            double tmp_x = hit_xy.getX();
-                            double tmp_y = hit_xy.getY();
-                            // ボールの中心角270度から360度の間の円周にヒットする場合有効 *
-                            if ((tmp_x > ball_center.x && tmp_x < ball_right) && (tmp_y > ball_top && tmp_y < ball_center.y)) {
-                                // ボールとブロックとの距離 横方向 ブロック左とボール交点 *
-                                double distance_width = tmp_x - left;
-                                // 横方向の距離が正の値だったら
-                                if (distance_width >= 0) {
-                                    // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
-                                    double radians = Math.toRadians(angle);
-                                    long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
-                                    // ここまでの経過時間内に衝突の可能性あるか
-                                    if (hitable_msec <= update_display_if.getElapsedTime()) {
-                                        // ボール中心がhitable_msecの間に移動した後の縦方向の位置
-                                        double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
-                                        // ボール中心がhitable_msecの間に移動した後の横方向の位置
-                                        double tmp_ball_center_x = ball_center.getX() + distance_width;
-                                        // 衝突側面の場合分けに使う基準値 *
-                                        double x45 = ball_center.x + ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        double y45 = ball_center.y - ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        HitProcessInterface hpi = new HitProcessInterface();
-                                        if (tmp_x < x45) {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.BOTTOM);
-                                        } else {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.RIGHT);
-                                        }
+                            double distance = CrossPoint.dist(bx, by, vectors[i].getX(), vectors[i].getY());
+                            distances.add(new Double(distance));
+                            if (i < 1) {
+                                index = 0;
+                            } else {
+                                if (distances.get(i) < distances.get(index)) {
+                                    index = i;
+                                }
+                            }
+                        }
 
-                                        if (ret_hpi == null) {
+                        PVector hit_xy = vectors[index];
+                        double tmp_x = hit_xy.getX();
+                        double tmp_y = hit_xy.getY();
+                        // ボールの中心角270度から360度の間の円周にヒットする場合有効 *
+                        if ((tmp_x > ball_center.x && tmp_x < ball_right) && (tmp_y > ball_top && tmp_y < ball_center.y)) {
+                            // ボールとブロックとの距離 横方向 ブロック左とボール交点 *
+                            double distance_width = tmp_x - left;
+                            // 横方向の距離が正の値だったら
+                            if (distance_width >= 0) {
+                                // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
+                                double radians = Math.toRadians(angle);
+                                long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
+                                // ここまでの経過時間内に衝突の可能性あるか
+                                if (hitable_msec <= update_display_if.getElapsedTime()) {
+                                    // ボール中心がhitable_msecの間に移動した後の縦方向の位置
+                                    double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
+                                    // ボール中心がhitable_msecの間に移動した後の横方向の位置
+                                    double tmp_ball_center_x = ball_center.getX() + distance_width;
+                                    // 衝突側面の場合分けに使う基準値 *
+                                    double x45 = ball_center.x + ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    double y45 = ball_center.y - ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    HitProcessInterface hpi = new HitProcessInterface();
+                                    if (tmp_x < x45) {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.BOTTOM);
+                                    } else {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.RIGHT);
+                                    }
+
+                                    if (ret_hpi == null) {
+                                        ret_hpi = hpi;
+                                    } else {
+                                        if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
                                             ret_hpi = hpi;
-                                        } else {
-                                            if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
-                                                ret_hpi = hpi;
-                                            }
                                         }
                                     }
                                 }
@@ -803,46 +931,60 @@ public class Block {
             // *** ブロック左下頂点との衝突
             {
                 // ブロック左下頂点とボールの交点を取得 *
-                PVector[] vectors = CrossPoint.getCrossPoints(left, bottom, angle, ball_center.x, ball_center.y, ball.radius);
+                double bx = left;
+                double by = bottom;
+                PVector[] vectors = CrossPoint.getCrossPoints(bx, by, angle, ball_center.x, ball_center.y, ball.radius);
                 if (vectors != null) {
                     if (vectors.length > 0) {
+                        ArrayList<Double> distances = new ArrayList<Double>();
+                        int index = 0;
                         for (int i = 0; i < vectors.length; i++) {
-                            PVector hit_xy = vectors[i];
-                            double tmp_x = hit_xy.getX();
-                            double tmp_y = hit_xy.getY();
-                            // ボールの中心角270度から360度の間の円周にヒットする場合有効 *
-                            if ((tmp_x > ball_center.x && tmp_x < ball_right) && (tmp_y > ball_top && tmp_y < ball_center.y)) {
-                                // ボールとブロックとの距離 横方向 ブロック左とボール交点 *
-                                double distance_width = left - tmp_x;
-                                // 横方向の距離が正の値だったら
-                                if (distance_width >= 0) {
-                                    // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
-                                    double radians = Math.toRadians(angle);
-                                    long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
-                                    // ここまでの経過時間内に衝突の可能性あるか
-                                    if (hitable_msec <= update_display_if.getElapsedTime()) {
-                                        // ボール中心がhitable_msecの間に移動した後の縦方向の位置
-                                        double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
-                                        // ボール中心がhitable_msecの間に移動した後の横方向の位置
-                                        double tmp_ball_center_x = ball_center.getX() + distance_width;
-                                        // 衝突側面の場合分けに使う基準値 *
-                                        double x45 = ball_center.x + ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        double y45 = ball_center.y - ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        HitProcessInterface hpi = new HitProcessInterface();
-                                        if (tmp_x < x45) {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.BOTTOM);
-                                        } else {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.LEFT);
-                                        }
+                            double distance = CrossPoint.dist(bx, by, vectors[i].getX(), vectors[i].getY());
+                            distances.add(new Double(distance));
+                            if (i < 1) {
+                                index = 0;
+                            } else {
+                                if (distances.get(i) < distances.get(index)) {
+                                    index = i;
+                                }
+                            }
+                        }
 
-                                        if (ret_hpi == null) {
+                        PVector hit_xy = vectors[index];
+                        double tmp_x = hit_xy.getX();
+                        double tmp_y = hit_xy.getY();
+                        // ボールの中心角270度から360度の間の円周にヒットする場合有効 *
+                        if ((tmp_x > ball_center.x && tmp_x < ball_right) && (tmp_y > ball_top && tmp_y < ball_center.y)) {
+                            // ボールとブロックとの距離 横方向 ブロック左とボール交点 *
+                            double distance_width = left - tmp_x;
+                            // 横方向の距離が正の値だったら
+                            if (distance_width >= 0) {
+                                // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
+                                double radians = Math.toRadians(angle);
+                                long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
+                                // ここまでの経過時間内に衝突の可能性あるか
+                                if (hitable_msec <= update_display_if.getElapsedTime()) {
+                                    // ボール中心がhitable_msecの間に移動した後の縦方向の位置
+                                    double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
+                                    // ボール中心がhitable_msecの間に移動した後の横方向の位置
+                                    double tmp_ball_center_x = ball_center.getX() + distance_width;
+                                    // 衝突側面の場合分けに使う基準値 *
+                                    double x45 = ball_center.x + ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    double y45 = ball_center.y - ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    HitProcessInterface hpi = new HitProcessInterface();
+                                    if (tmp_x < x45) {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.BOTTOM);
+                                    } else {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.LEFT);
+                                    }
+
+                                    if (ret_hpi == null) {
+                                        ret_hpi = hpi;
+                                    } else {
+                                        if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
                                             ret_hpi = hpi;
-                                        } else {
-                                            if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
-                                                ret_hpi = hpi;
-                                            }
                                         }
                                     }
                                 }
@@ -854,46 +996,60 @@ public class Block {
             // *** ブロック左上頂点との衝突
             {
                 // ブロック左上頂点とボールの交点を取得 *
-                PVector[] vectors = CrossPoint.getCrossPoints(left, top, angle, ball_center.x, ball_center.y, ball.radius);
+                double bx = left;
+                double by = top;
+                PVector[] vectors = CrossPoint.getCrossPoints(bx, by, angle, ball_center.x, ball_center.y, ball.radius);
                 if (vectors != null) {
                     if (vectors.length > 0) {
+                        ArrayList<Double> distances = new ArrayList<Double>();
+                        int index = 0;
                         for (int i = 0; i < vectors.length; i++) {
-                            PVector hit_xy = vectors[i];
-                            double tmp_x = hit_xy.getX();
-                            double tmp_y = hit_xy.getY();
-                            // ボールの中心角0度から90度の間の円周にヒットする場合有効 *
-                            if ((tmp_x > ball_center.x && tmp_x < ball_right) && (tmp_y > ball_center.y && tmp_y < ball_bottom)) {
-                                // ボールとブロックとの距離 横方向 ブロック左とボール交点 *
-                                double distance_width = left - tmp_x;
-                                // 横方向の距離が正の値だったら
-                                if (distance_width >= 0) {
-                                    // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
-                                    double radians = Math.toRadians(angle);
-                                    long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
-                                    // ここまでの経過時間内に衝突の可能性あるか
-                                    if (hitable_msec <= update_display_if.getElapsedTime()) {
-                                        // ボール中心がhitable_msecの間に移動した後の縦方向の位置
-                                        double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
-                                        // ボール中心がhitable_msecの間に移動した後の横方向の位置
-                                        double tmp_ball_center_x = ball_center.getX() + distance_width;
-                                        // 衝突側面の場合分けに使う基準値 *
-                                        double x45 = ball_center.x + ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        double y45 = ball_center.y + ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        HitProcessInterface hpi = new HitProcessInterface();
-                                        if (tmp_x < x45) {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.TOP);
-                                        } else {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.LEFT);
-                                        }
+                            double distance = CrossPoint.dist(bx, by, vectors[i].getX(), vectors[i].getY());
+                            distances.add(new Double(distance));
+                            if (i < 1) {
+                                index = 0;
+                            } else {
+                                if (distances.get(i) < distances.get(index)) {
+                                    index = i;
+                                }
+                            }
+                        }
 
-                                        if (ret_hpi == null) {
+                        PVector hit_xy = vectors[index];
+                        double tmp_x = hit_xy.getX();
+                        double tmp_y = hit_xy.getY();
+                        // ボールの中心角0度から90度の間の円周にヒットする場合有効 *
+                        if ((tmp_x > ball_center.x && tmp_x < ball_right) && (tmp_y > ball_center.y && tmp_y < ball_bottom)) {
+                            // ボールとブロックとの距離 横方向 ブロック左とボール交点 *
+                            double distance_width = left - tmp_x;
+                            // 横方向の距離が正の値だったら
+                            if (distance_width >= 0) {
+                                // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
+                                double radians = Math.toRadians(angle);
+                                long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
+                                // ここまでの経過時間内に衝突の可能性あるか
+                                if (hitable_msec <= update_display_if.getElapsedTime()) {
+                                    // ボール中心がhitable_msecの間に移動した後の縦方向の位置
+                                    double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
+                                    // ボール中心がhitable_msecの間に移動した後の横方向の位置
+                                    double tmp_ball_center_x = ball_center.getX() + distance_width;
+                                    // 衝突側面の場合分けに使う基準値 *
+                                    double x45 = ball_center.x + ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    double y45 = ball_center.y + ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    HitProcessInterface hpi = new HitProcessInterface();
+                                    if (tmp_x < x45) {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.TOP);
+                                    } else {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.LEFT);
+                                    }
+
+                                    if (ret_hpi == null) {
+                                        ret_hpi = hpi;
+                                    } else {
+                                        if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
                                             ret_hpi = hpi;
-                                        } else {
-                                            if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
-                                                ret_hpi = hpi;
-                                            }
                                         }
                                     }
                                 }
@@ -905,46 +1061,60 @@ public class Block {
             // *** ブロック右下頂点との衝突
             {
                 // ブロック右下頂点とボールの交点を取得 *
-                PVector[] vectors = CrossPoint.getCrossPoints(right, bottom, angle, ball_center.x, ball_center.y, ball.radius);
+                double bx = right;
+                double by = bottom;
+                PVector[] vectors = CrossPoint.getCrossPoints(bx, by, angle, ball_center.x, ball_center.y, ball.radius);
                 if (vectors != null) {
                     if (vectors.length > 0) {
+                        ArrayList<Double> distances = new ArrayList<Double>();
+                        int index = 0;
                         for (int i = 0; i < vectors.length; i++) {
-                            PVector hit_xy = vectors[i];
-                            double tmp_x = hit_xy.getX();
-                            double tmp_y = hit_xy.getY();
-                            // ボールの中心角180度から270度の間の円周にヒットする場合有効 *
-                            if ((tmp_x > ball_left && tmp_x < ball_center.x) && (tmp_y > ball_top && tmp_y < ball_center.y)) {
-                                // ボールとブロックとの距離 横方向 ブロック右とボール交点 *
-                                double distance_width = right - tmp_x;
-                                // 横方向の距離が正の値だったら
-                                if (distance_width >= 0) {
-                                    // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
-                                    double radians = Math.toRadians(angle);
-                                    long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
-                                    // ここまでの経過時間内に衝突の可能性あるか
-                                    if (hitable_msec <= update_display_if.getElapsedTime()) {
-                                        // ボール中心がhitable_msecの間に移動した後の縦方向の位置
-                                        double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
-                                        // ボール中心がhitable_msecの間に移動した後の横方向の位置
-                                        double tmp_ball_center_x = ball_center.getX() + distance_width;
-                                        // 衝突側面の場合分けに使う基準値 *
-                                        double x45 = ball_center.x - ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        double y45 = ball_center.y - ball.getRadius() * Math.cos(Math.toRadians(45));
-                                        HitProcessInterface hpi = new HitProcessInterface();
-                                        if (tmp_x < x45) {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.RIGHT);
-                                        } else {
-                                            hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
-                                                    HitProcessInterface.HitSide.BOTTOM);
-                                        }
+                            double distance = CrossPoint.dist(bx, by, vectors[i].getX(), vectors[i].getY());
+                            distances.add(new Double(distance));
+                            if (i < 1) {
+                                index = 0;
+                            } else {
+                                if (distances.get(i) < distances.get(index)) {
+                                    index = i;
+                                }
+                            }
+                        }
 
-                                        if (ret_hpi == null) {
+                        PVector hit_xy = vectors[index];
+                        double tmp_x = hit_xy.getX();
+                        double tmp_y = hit_xy.getY();
+                        // ボールの中心角180度から270度の間の円周にヒットする場合有効 *
+                        if ((tmp_x > ball_left && tmp_x < ball_center.x) && (tmp_y > ball_top && tmp_y < ball_center.y)) {
+                            // ボールとブロックとの距離 横方向 ブロック右とボール交点 *
+                            double distance_width = right - tmp_x;
+                            // 横方向の距離が正の値だったら
+                            if (distance_width >= 0) {
+                                // ボール交点とブロックの左面が同じ横方向位置になるまでの時間
+                                double radians = Math.toRadians(angle);
+                                long hitable_msec = Double.valueOf(Math.ceil(distance_width / (ball.getSpeed() * Math.abs(Math.cos(radians))))).longValue();
+                                // ここまでの経過時間内に衝突の可能性あるか
+                                if (hitable_msec <= update_display_if.getElapsedTime()) {
+                                    // ボール中心がhitable_msecの間に移動した後の縦方向の位置
+                                    double tmp_ball_center_y = ball_center.y + (Math.abs(Math.sin(ball.getSpeed() * hitable_msec)));
+                                    // ボール中心がhitable_msecの間に移動した後の横方向の位置
+                                    double tmp_ball_center_x = ball_center.getX() + distance_width;
+                                    // 衝突側面の場合分けに使う基準値 *
+                                    double x45 = ball_center.x - ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    double y45 = ball_center.y - ball.getRadius() * Math.cos(Math.toRadians(45));
+                                    HitProcessInterface hpi = new HitProcessInterface();
+                                    if (tmp_x < x45) {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.RIGHT);
+                                    } else {
+                                        hpi.setData(this, hitable_msec, tmp_ball_center_x, tmp_ball_center_y,
+                                                HitProcessInterface.HitSide.BOTTOM);
+                                    }
+
+                                    if (ret_hpi == null) {
+                                        ret_hpi = hpi;
+                                    } else {
+                                        if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
                                             ret_hpi = hpi;
-                                        } else {
-                                            if (hpi.getHitableMsec() < ret_hpi.getHitableMsec()) {
-                                                ret_hpi = hpi;
-                                            }
                                         }
                                     }
                                 }
